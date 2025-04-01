@@ -39,7 +39,6 @@ def init(argv=None, bootstrap=False):
 
         petsc_dir = config["settings"]["petsc_dir"]
         petsc_arch = config["settings"]["petsc_arch"]
-        petsc_dir, petsc_arch = get_config()
 
         _check_environment(petsc_dir, petsc_arch)
     else:
@@ -59,6 +58,8 @@ def init(argv=None, bootstrap=False):
 
             petsc_dir = os.environ["PETSC_DIR"]
             petsc_arch = os.environ.get("PETSC_ARCH", "")  # can be empty
+
+    _check_petsc_exists(petsc_dir, petsc_arch)
 
     # Set the globals
     _petsc_dir = petsc_dir
@@ -96,6 +97,10 @@ def _check_environment(petsc_dir, petsc_arch):
         or os.environ.get("PETSC_ARCH", petsc_arch) != petsc_arch
     ):
         raise InvalidPetscException(f"PETSC_DIR and/or PETSC_ARCH are set but do not match the expected values of '{petsc_dir}' and '{petsc_arch}'")
+
+
+def _check_petsc_exists(petsc_dir, petsc_arch):
+    return os.path.exists(os.path.join(petsc_dir, petsc_arch, "include", "petscconf.h"))
 
 
 def _check_initialized(func):
