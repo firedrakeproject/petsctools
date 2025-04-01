@@ -1,0 +1,41 @@
+[project]
+name = "petsctools"
+version = "0.0.1"
+description = "TODO"
+readme = "README"
+license = {file = "LICENSE"}
+maintainers = [
+  {name = "Connor J. Ward", email = "c.ward20@imperial.ac.uk"},
+]
+requires-python = ">=3.10"
+dependencies = [
+  "numpy",  # petsc4py needs numpy but it might not be available in the isolated build environment
+  "packaging",
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Operating System :: Unix",
+]
+
+[project.urls]
+Repository = "https://github.com/connorjward/petsctools"
+
+[build-system]
+requires = [
+  "numpy",  # petsc4py needs numpy but it might not be available in the isolated build environment
+  "setuptools",
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.package-data]
+# Unless specified these files will not be installed along with the
+# rest of the package
+petsctools = ["config.ini"]

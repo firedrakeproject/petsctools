@@ -1,0 +1,4 @@
+petsctools/config.ini
+
+*/__pycache__
+*.egg-info
