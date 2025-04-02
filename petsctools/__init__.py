@@ -118,11 +118,11 @@ def get_config():
 
 
 @_check_initialized
-def get_petsc_variables():
+def get_petscvariables():
     """Attempts obtain a dictionary of PETSc configuration settings
     """
     path = os.path.join(_petsc_dir, _petsc_arch, "lib/petsc/conf/petscvariables")
-    with open(path) as fh:
+    with open(path) as f:
         # Split lines on first '=' (assignment)
-        splitlines = (line.split("=", maxsplit=1) for line in fh.readlines())
+        splitlines = (line.split("=", maxsplit=1) for line in f.readlines())
     return {k.strip(): v.strip() for k, v in splitlines}
