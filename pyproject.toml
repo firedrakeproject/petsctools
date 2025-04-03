@@ -10,7 +10,6 @@ maintainers = [
 requires-python = ">=3.10"
 dependencies = [
   "packaging",
-  "petsc4py",
 ]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
@@ -26,7 +25,8 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-slepc = ["slepc4py"]
+petsc4py = ["petsc4py"]
+slepc4py = ["slepc4py"]
 
 [project.urls]
 Repository = "https://github.com/connorjward/petsctools"
