@@ -1,9 +1,9 @@
 [project]
 name = "petsctools"
-version = "0.0.1"
-description = "Utilities for using petsc4py and slepc4py"
+version = "2025.5.0.dev0"
+description = "Pythonic extensions for petsc4py and slepc4py"
 readme = "README.md"
-license = {file = "LICENSE"}
+license = "GPL-3.0-or-later"
 maintainers = [
   {name = "Connor J. Ward", email = "c.ward20@imperial.ac.uk"},
 ]
@@ -29,7 +29,7 @@ petsc4py = ["petsc4py"]
 slepc4py = ["slepc4py"]
 
 [project.urls]
-Repository = "https://github.com/connorjward/petsctools"
+Repository = "https://github.com/firedrakeproject/petsctools"
 
 [build-system]
 requires = ["setuptools"]
