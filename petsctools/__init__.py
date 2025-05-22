@@ -1,6 +1,4 @@
-import os
-
-from petsctools.exceptions import PetscToolsException  # noqa: F401
+from .exceptions import PetscToolsException  # noqa: F401
 
 
 class MissingPetscException(PetscToolsException):
@@ -8,6 +6,8 @@ class MissingPetscException(PetscToolsException):
 
 
 def get_config():
+    import os
+
     try:
         import petsc4py
         return petsc4py.get_config()
@@ -34,6 +34,8 @@ def get_petsc_arch():
 
 def get_petscvariables():
     """Return PETSc's configuration information."""
+    import os
+
     path = os.path.join(get_petsc_dir(), get_petsc_arch(), "lib/petsc/conf/petscvariables")
     with open(path) as f:
         pairs = [line.split("=", maxsplit=1) for line in f.readlines()]
@@ -43,13 +45,16 @@ def get_petscvariables():
 try:
     import petsc4py  # noqa: F401
     petsc4py_found = True
+    del petsc4py
 except ImportError:
     petsc4py_found = False
 
-
 if petsc4py_found:
-    from petsctools.init import (  # noqa: F401
+    from .init import (  # noqa: F401
         InvalidEnvironmentException,
         InvalidPetscVersionException,
         init,
     )
+    from .monitor import AbstractKSPMonitorFunction  # noqa: F401
+
+del petsc4py_found
