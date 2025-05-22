@@ -1,50 +1,6 @@
-<<<<<<< Updated upstream
-import os
-
-from petsctools.exceptions import PetscToolsException  # noqa: F401
-
-
-class MissingPetscException(PetscToolsException):
-    pass
-
-
-def get_config():
-    try:
-        import petsc4py
-        return petsc4py.get_config()
-    except ImportError:
-        pass
-
-    if "PETSC_DIR" in os.environ:
-        petsc_dir = os.environ["PETSC_DIR"]
-        petsc_arch = os.getenv("PETSC_ARCH")  # can be empty
-        return {"PETSC_DIR": petsc_dir, "PETSC_ARCH": petsc_arch}
-    else:
-        raise MissingPetscException(
-            "PETSc cannot be found, please set PETSC_DIR (and maybe PETSC_ARCH)"
-        )
-
-
-def get_petsc_dir():
-    return get_config()["PETSC_DIR"]
-
-
-def get_petsc_arch():
-    return get_config()["PETSC_ARCH"]
-
-
-def get_petscvariables():
-    """Return PETSc's configuration information."""
-    path = os.path.join(get_petsc_dir(), get_petsc_arch(), "lib/petsc/conf/petscvariables")
-    with open(path) as f:
-        pairs = [line.split("=", maxsplit=1) for line in f.readlines()]
-    return {k.strip(): v.strip() for k, v in pairs}
-
-=======
 from .config import *  # noqa: F401
 from .exceptions import PetscToolsException  # noqa: F401
 from .options import flatten_parameters
->>>>>>> Stashed changes
 
 try:
     import petsc4py  # noqa: F401
@@ -59,10 +15,7 @@ if petsc4py_found:
         InvalidPetscVersionException,
         init,
     )
-<<<<<<< Updated upstream
-=======
     from .monitor import AbstractKSPMonitorFunction  # noqa: F401
     from .options import OptionsManager
 
 del petsc4py_found
->>>>>>> Stashed changes
