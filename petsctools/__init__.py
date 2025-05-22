@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import os
 
 from petsctools.exceptions import PetscToolsException  # noqa: F401
@@ -39,6 +40,11 @@ def get_petscvariables():
         pairs = [line.split("=", maxsplit=1) for line in f.readlines()]
     return {k.strip(): v.strip() for k, v in pairs}
 
+=======
+from .config import *  # noqa: F401
+from .exceptions import PetscToolsException  # noqa: F401
+from .options import flatten_parameters
+>>>>>>> Stashed changes
 
 try:
     import petsc4py  # noqa: F401
@@ -53,3 +59,10 @@ if petsc4py_found:
         InvalidPetscVersionException,
         init,
     )
+<<<<<<< Updated upstream
+=======
+    from .monitor import AbstractKSPMonitorFunction  # noqa: F401
+    from .options import OptionsManager
+
+del petsc4py_found
+>>>>>>> Stashed changes
