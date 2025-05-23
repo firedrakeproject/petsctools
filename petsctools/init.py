@@ -4,8 +4,6 @@ import warnings
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 
-import petsc4py
-
 from petsctools.exceptions import PetscToolsException
 
 
@@ -19,6 +17,7 @@ class InvalidPetscVersionException(PetscToolsException):
 
 def init(argv=None, *, version_spec=""):
     """Initialise PETSc."""
+    import petsc4py
 
     if argv is None:
         argv = sys.argv
@@ -29,6 +28,8 @@ def init(argv=None, *, version_spec=""):
 
 
 def check_environment_matches_petsc4py_config():
+    import petsc4py
+
     config = petsc4py.get_config()
     petsc_dir = config["PETSC_DIR"]
     petsc_arch = config["PETSC_ARCH"]
@@ -43,6 +44,7 @@ def check_environment_matches_petsc4py_config():
 
 
 def check_petsc_version(version_spec):
+    import petsc4py
     from petsc4py import PETSc
 
     version_spec = SpecifierSet(version_spec)

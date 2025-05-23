@@ -2,15 +2,8 @@ import functools
 import os
 import subprocess
 
+from petsctools import utils
 from petsctools.exceptions import PetscToolsException
-
-
-try:
-    import petsc4py  # noqa: F401
-    petsc4py_found = True
-    del petsc4py
-except ImportError:
-    petsc4py_found = False
 
 
 __all__ = (
@@ -88,8 +81,7 @@ def get_external_packages():
     return get_petscconf_h()["HAVE_PACKAGES"].split(":")[1:-1]
 
 
-if petsc4py_found:
-    from petsc4py import PETSc
+if utils.petsc4py_is_installed():
 
     def _get_dependencies(filename):
         """Get all the dependencies of a shared object library"""
@@ -108,6 +100,8 @@ if petsc4py_found:
 
 
     def get_blas_library():
+        from petsc4py import PETSc
+
         """Get the path to the BLAS library that PETSc links to"""
         petsc_py_dependencies = _get_dependencies(PETSc.__file__)
         library_names = ["blas", "libmkl"]
@@ -124,5 +118,6 @@ if petsc4py_found:
                 return filename
 
         return None
+
 
     __all__ += ("get_blas_library",)
