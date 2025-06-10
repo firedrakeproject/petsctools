@@ -40,7 +40,9 @@ def get_petsc_arch():
 def get_petscvariables():
     """Return PETSc's configuration information."""
     path = os.path.join(
-        get_petsc_dir(), get_petsc_arch() or "", "lib/petsc/conf/petscvariables"
+        get_petsc_dir(),
+        get_petsc_arch() or "",
+        "lib/petsc/conf/petscvariables",
     )
     with open(path) as f:
         pairs = [line.split("=", maxsplit=1) for line in f.readlines()]
