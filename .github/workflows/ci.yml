@@ -26,16 +26,10 @@ jobs:
           sudo apt-get update
           sudo apt-get -y install build-essential libopenmpi-dev python3-venv
 
-      - name: Checkout PETSc
-        uses: actions/checkout@v4
-        with:
-          repository: git@gitlab.com:petsc/petsc.git
-          ref: release
-          path: petsc
-
       - name: Install PETSc
-        working-directory: petsc
         run: |
+          git clone https://gitlab.com/petsc/petsc.git --branch release
+          cd petsc
           ./configure
           make
 
