@@ -16,7 +16,7 @@ def test_get_config():
 
     # Make sure that PETSC_DIR and PETSC_ARCH point to a real installation
     assert os.path.exists(
-        f"{petsc_dir}/{petsc_arch}/lib/petsc/conf/petscvariables"
+        f"{petsc_dir}/{petsc_arch or ''}/lib/petsc/conf/petscvariables"
     )
 
 
