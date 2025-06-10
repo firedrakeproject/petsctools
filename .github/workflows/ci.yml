@@ -24,7 +24,11 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get -y install build-essential libopenmpi-dev python3-venv
+          sudo apt-get -y install \
+            build-essential \
+            libopenblas-dev \
+            libopenmpi-dev \
+            python3-venv
 
       - name: Install PETSc
         run: |
