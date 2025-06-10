@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  # Cancel running job if new commits are pushed
+  group: >
+    ${{ github.workflow }}-
+    ${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test petsctools
+    runs-on: ubuntu-latest
+    env:
+      PETSC_DIR: ${{ github.workspace }}/petsc
+      PETSC_ARCH: arch-default
+    steps:
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install \
+            build-essential \
+            libopenblas-dev \
+            libopenmpi-dev \
+            python3-venv
+
+      - name: Install PETSc
+        run: |
+          git clone https://gitlab.com/petsc/petsc.git --branch release
+          cd petsc
+          ./configure
+          make
+
+      - name: Checkout petsctools
+        uses: actions/checkout@v4
+        with:
+          # Download petsctools into a subdirectory not called 'petsctools' to
+          # make sure that the package installs correctly. Otherwise
+          # 'import petsctools' could work even if the installation failed
+          # because it is a subdirectory.
+          path: petsctools-repo
+
+      - name: Install petsctools
+        id: install
+        run: |
+          python3 -m venv --system-site-packages venv-petsctools
+          . venv-petsctools/bin/activate
+
+          : # upgrade pip since dependency groups were only introduced in pip 25.1
+          pip install -U pip
+
+          pip install --verbose ./petsctools-repo
+          pip install --group ./petsctools-repo/pyproject.toml:ci
+          pip list
+
+      - name: Lint codebase
+        run: |
+          . venv-petsctools/bin/activate
+          ruff check petsctools-repo
+
+      - name: Run tests without petsc4py
+        if: success() || steps.install.conclusion == 'success'
+        run: |
+          . venv-petsctools/bin/activate
+          pytest petsctools-repo
+
+      - name: Install petsc4py
+        id: install-petsc4py
+        if: success() || steps.install.conclusion == 'success'
+        run: |
+          . venv-petsctools/bin/activate
+          pip install --verbose $PETSC_DIR/src/binding/petsc4py
+
+      - name: Run tests with petsc4py
+        if: success() || steps.install-petsc4py.conclusion == 'success'
+        run: |
+          . venv-petsctools/bin/activate
+          pytest petsctools-repo
