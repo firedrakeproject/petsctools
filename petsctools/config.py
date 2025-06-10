@@ -2,19 +2,7 @@ import functools
 import os
 import subprocess
 
-from petsctools import utils
 from petsctools.exceptions import PetscToolsException
-
-
-__all__ = (
-    "MissingPetscException",
-    "get_config",
-    "get_petsc_dir",
-    "get_petsc_arch",
-    "get_petscvariables",
-    "get_petscconf_h",
-    "get_external_packages",
-)
 
 
 class MissingPetscException(PetscToolsException):
@@ -24,6 +12,7 @@ class MissingPetscException(PetscToolsException):
 def get_config():
     try:
         import petsc4py
+
         return petsc4py.get_config()
     except ImportError:
         pass
@@ -34,7 +23,8 @@ def get_config():
         return {"PETSC_DIR": petsc_dir, "PETSC_ARCH": petsc_arch}
     else:
         raise MissingPetscException(
-            "PETSc cannot be found, please set PETSC_DIR (and maybe PETSC_ARCH)"
+            "PETSc cannot be found, please set PETSC_DIR (and maybe "
+            "PETSC_ARCH)"
         )
 
 
@@ -49,7 +39,9 @@ def get_petsc_arch():
 @functools.lru_cache()
 def get_petscvariables():
     """Return PETSc's configuration information."""
-    path = os.path.join(get_petsc_dir(), get_petsc_arch(), "lib/petsc/conf/petscvariables")
+    path = os.path.join(
+        get_petsc_dir(), get_petsc_arch(), "lib/petsc/conf/petscvariables"
+    )
     with open(path) as f:
         pairs = [line.split("=", maxsplit=1) for line in f.readlines()]
     return {k.strip(): v.strip() for k, v in pairs}
@@ -64,11 +56,15 @@ def get_petscconf_h():
 
     The result is memoized to avoid constantly reading the file.
     """
-    path = os.path.join(get_petsc_dir(), get_petsc_arch(), "include/petscconf.h")
+    path = os.path.join(
+        get_petsc_dir(), get_petsc_arch(), "include/petscconf.h"
+    )
     with open(path) as f:
         splitlines = (
             line.removeprefix("#define PETSC_").split(" ", maxsplit=1)
-            for line in filter(lambda x: x.startswith("#define PETSC_"), f.readlines())
+            for line in filter(
+                lambda x: x.startswith("#define PETSC_"), f.readlines()
+            )
         )
     return {k: v.strip() for k, v in splitlines}
 
@@ -81,43 +77,46 @@ def get_external_packages():
     return get_petscconf_h()["HAVE_PACKAGES"].split(":")[1:-1]
 
 
-if utils.petsc4py_is_installed():
-
-    def _get_dependencies(filename):
-        """Get all the dependencies of a shared object library"""
-        # Linux uses `ldd` to look at shared library linkage, MacOS uses `otool`
-        try:
-            program = ["ldd"]
-            cmd = subprocess.run([*program, filename], stdout=subprocess.PIPE)
-            # Filter out the VDSO and the ELF interpreter on Linux
-            results = [line for line in cmd.stdout.decode("utf-8").split("\n") if "=>" in line]
-            return [line.split()[2] for line in results]
-        except FileNotFoundError:
-            program = ["otool", "-L"]
-            cmd = subprocess.run([*program, filename], stdout=subprocess.PIPE)
-            # Meanwhile MacOS puts garbage at the beginning and end of `otool` output
-            return [line.split()[0] for line in cmd.stdout.decode("utf-8").split("\n")[1:-1]]
-
-
-    def get_blas_library():
-        from petsc4py import PETSc
-
-        """Get the path to the BLAS library that PETSc links to"""
-        petsc_py_dependencies = _get_dependencies(PETSc.__file__)
-        library_names = ["blas", "libmkl"]
-        for filename in petsc_py_dependencies:
-            if any(name in filename for name in library_names):
-                return filename
-
-        # On newer MacOS versions, the PETSc Python extension library doesn't link
-        # to BLAS or MKL directly, so we check the PETSc C library.
-        petsc_c_library = [f for f in petsc_py_dependencies if "libpetsc" in f][0]
-        petsc_c_dependencies = _get_dependencies(petsc_c_library)
-        for filename in petsc_c_dependencies:
-            if any(name in filename for name in library_names):
-                return filename
-
-        return None
+def _get_so_dependencies(filename):
+    """Get all the dependencies of a shared object library."""
+    # Linux uses `ldd` to look at shared library linkage, MacOS uses `otool`
+    try:
+        program = ["ldd"]
+        cmd = subprocess.run([*program, filename], stdout=subprocess.PIPE)
+        # Filter out the VDSO and the ELF interpreter on Linux
+        results = [
+            line
+            for line in cmd.stdout.decode("utf-8").split("\n")
+            if "=>" in line
+        ]
+        return [line.split()[2] for line in results]
+    except FileNotFoundError:
+        program = ["otool", "-L"]
+        cmd = subprocess.run([*program, filename], stdout=subprocess.PIPE)
+        # MacOS puts garbage at the beginning and end of `otool` output
+        return [
+            line.split()[0]
+            for line in cmd.stdout.decode("utf-8").split("\n")[1:-1]
+        ]
 
 
-    __all__ += ("get_blas_library",)
+@functools.lru_cache()
+def get_blas_library():
+    """Get the path to the BLAS library that PETSc links to."""
+    from petsc4py import PETSc
+
+    petsc_py_dependencies = _get_so_dependencies(PETSc.__file__)
+    library_names = ["blas", "libmkl"]
+    for filename in petsc_py_dependencies:
+        if any(name in filename for name in library_names):
+            return filename
+
+    # On newer MacOS versions, the PETSc Python extension library doesn't link
+    # to BLAS or MKL directly, so we check the PETSc C library.
+    petsc_c_library = [f for f in petsc_py_dependencies if "libpetsc" in f][0]
+    petsc_c_dependencies = _get_so_dependencies(petsc_c_library)
+    for filename in petsc_c_dependencies:
+        if any(name in filename for name in library_names):
+            return filename
+
+    return None

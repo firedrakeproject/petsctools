@@ -38,18 +38,23 @@ jobs:
           python3 -m venv --system-site-packages venv-petsctools
           . venv-petsctools/bin/activate
           pip install ./petsctools-repo
+          pip install ./petsctools-repo --group ci
           pip list
+
+      - name: Lint codebase
+        run: |
+          . venv-petsctools/bin/activate
+          ruff check petsctools-repo
 
       - name: Run tests without petsc4py
         run: |
           . venv-petsctools/bin/activate
-          python -c "import petsctools"
+          pytest
 
       - name: Install petsc4py
-        run: |
-          sudo apt-get -y install python3-petsc4py 
+        run: sudo apt-get -y install python3-petsc4py 
 
       - name: Run tests with petsc4py
         run: |
           . venv-petsctools/bin/activate
-          python -c "import petsctools"
+          pytest

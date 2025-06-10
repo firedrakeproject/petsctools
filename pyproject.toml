@@ -28,3 +28,20 @@ Repository = "https://github.com/firedrakeproject/petsctools"
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+[dependency-groups]
+lint = ["ruff"]
+test = ["pytest"]
+ci = [
+  {include-group = "lint"},
+  {include-group = "test"},
+]
+
+[tool.ruff]
+line-length = 79
+
+[tool.ruff.lint]
+# Add the `line-too-long` rule to the enforced rule set. By default, Ruff omits rules that
+# overlap with the use of a formatter, like Black, but we can override this behavior by
+# explicitly adding the rule.
+extend-select = ["E501"]

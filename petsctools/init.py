@@ -1,6 +1,7 @@
 import os
 import sys
 import warnings
+
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 
@@ -38,34 +39,38 @@ def check_environment_matches_petsc4py_config():
         or os.environ.get("PETSC_ARCH", petsc_arch) != petsc_arch
     ):
         raise InvalidEnvironmentException(
-            "PETSC_DIR and/or PETSC_ARCH are set but do not match the expected values "
-            f"of '{petsc_dir}' and '{petsc_arch}' from petsc4py"
+            "PETSC_DIR and/or PETSC_ARCH are set but do not match the "
+            f"expected values of '{petsc_dir}' and '{petsc_arch}' from "
+            "petsc4py"
         )
 
 
-def check_petsc_version(version_spec):
-    import petsc4py
-    from petsc4py import PETSc
+def check_petsc_version(version_spec) -> None:
+    import petsc4py.PETSc
 
     version_spec = SpecifierSet(version_spec)
 
-    petsc_version = Version("{}.{}.{}".format(*PETSc.Sys.getVersion()))
+    petsc_version = Version(
+        "{}.{}.{}".format(*petsc4py.PETSc.Sys.getVersion())
+    )
     petsc4py_version = Version(petsc4py.__version__)
 
     if petsc_version != petsc4py_version:
         warnings.warn(
-            f"The PETSc version ({petsc_version}) does not match the petsc4py version "
-            f"({petsc4py_version}), this may cause unexpected behaviour")
+            f"The PETSc version ({petsc_version}) does not match the petsc4py "
+            f"version ({petsc4py_version}), this may cause unexpected "
+            "behaviour"
+        )
 
     if petsc_version not in version_spec:
         raise InvalidPetscVersionException(
-            f"PETSc version ({petsc_version}) does not obey the provided constraints "
-            f"({version_spec}). You probably need to rebuild PETSc or upgrade your package."
+            f"PETSc version ({petsc_version}) does not obey the provided "
+            f"constraints ({version_spec}). You probably need to rebuild "
+            "PETSc or upgrade your package."
         )
     if petsc4py_version not in version_spec:
         raise InvalidPetscVersionException(
-            f"petsc4py version ({petsc4py_version}) does not obey the provided constraints "
-            f"({version_spec}). You probably need to rebuild petsc4py or upgrade your package."
+            f"petsc4py version ({petsc4py_version}) does not obey the "
+            f"provided constraints ({version_spec}). You probably need to "
+            "rebuild petsc4py or upgrade your package."
         )
-
-
