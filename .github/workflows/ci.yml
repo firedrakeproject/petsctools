@@ -42,7 +42,7 @@ jobs:
           pip install -U pip
 
           pip install ./petsctools-repo
-          pip install ./petsctools-repo --group ci
+          pip install --group ./petsctools-repo/pyproject.toml:ci
           pip list
 
       - name: Lint codebase
