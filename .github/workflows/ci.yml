@@ -37,6 +37,10 @@ jobs:
         run: |
           python3 -m venv --system-site-packages venv-petsctools
           . venv-petsctools/bin/activate
+
+          : # upgrade pip since dependency groups were only introduced in pip 25.1
+          pip install -U pip
+
           pip install ./petsctools-repo
           pip install ./petsctools-repo --group ci
           pip list
