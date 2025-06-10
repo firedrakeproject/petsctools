@@ -8,23 +8,18 @@ from .config import (  # noqa: F401
     get_external_packages,
 )
 from .exceptions import PetscToolsException  # noqa: F401
+from .options import flatten_parameters  # noqa: F401
 
 # Now conditionally import the functions that depend on petsc4py
-try:
-    import petsc4py
+from .utils import PETSC4PY_INSTALLED
 
-    petsc4py_installed = True
-    del petsc4py
-except ImportError:
-    petsc4py_installed = False
-
-if petsc4py_installed:
+if PETSC4PY_INSTALLED:
     from .config import get_blas_library  # noqa: F401
     from .init import (  # noqa: F401
         InvalidEnvironmentException,
         InvalidPetscVersionException,
         init,
     )
-    from .options import OptionsManager, flatten_parameters  # noqa: F401
+    from .options import OptionsManager  # noqa: F401
 
-del petsc4py_installed
+del PETSC4PY_INSTALLED
