@@ -68,7 +68,7 @@ jobs:
         if: success() || steps.install.conclusion == 'success'
         run: |
           . venv-petsctools/bin/activate
-          pytest
+          pytest petsctools-repo
 
       - name: Install petsc4py
         id: install-petsc4py
@@ -81,4 +81,4 @@ jobs:
         if: success() || steps.install-petsc4py.conclusion == 'success'
         run: |
           . venv-petsctools/bin/activate
-          pytest
+          pytest petsctools-repo
