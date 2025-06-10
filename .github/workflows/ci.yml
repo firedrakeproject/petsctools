@@ -18,9 +18,29 @@ jobs:
     name: Test petsctools
     runs-on: ubuntu-latest
     env:
-      PETSC_DIR: /usr/lib/petscdir/petsc3.19/s390x-linux-gnu-real/
+      PETSC_DIR: ${{ github.workspace }}/petsc
+      PETSC_ARCH: arch-default
     steps:
-      - uses: actions/checkout@v4
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install build-essential libopenmpi-dev python3-venv
+
+      - name: Checkout PETSc
+        uses: actions/checkout@v4
+        with:
+          repository: git@gitlab.com:petsc/petsc.git
+          ref: release
+          path: petsc
+
+      - name: Install PETSc
+        working-directory: petsc
+        run: |
+          ./configure
+          make
+
+      - name: Checkout petsctools
+        uses: actions/checkout@v4
         with:
           # Download petsctools into a subdirectory not called 'petsctools' to
           # make sure that the package installs correctly. Otherwise
@@ -28,12 +48,8 @@ jobs:
           # because it is a subdirectory.
           path: petsctools-repo
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get -y install petsc-dev python3-venv
-
       - name: Install petsctools
+        id: install
         run: |
           python3 -m venv --system-site-packages venv-petsctools
           . venv-petsctools/bin/activate
@@ -41,7 +57,7 @@ jobs:
           : # upgrade pip since dependency groups were only introduced in pip 25.1
           pip install -U pip
 
-          pip install ./petsctools-repo
+          pip install --verbose ./petsctools-repo
           pip install --group ./petsctools-repo/pyproject.toml:ci
           pip list
 
@@ -51,14 +67,20 @@ jobs:
           ruff check petsctools-repo
 
       - name: Run tests without petsc4py
+        if: success() || steps.install.conclusion == 'success'
         run: |
           . venv-petsctools/bin/activate
           pytest
 
       - name: Install petsc4py
-        run: sudo apt-get -y install python3-petsc4py 
+        id: install-petsc4py
+        if: success() || steps.install.conclusion == 'success'
+        run: |
+          . venv-petsctools/bin/activate
+          pip install --verbose $PETSC_DIR/src/binding/petsc4py
 
       - name: Run tests with petsc4py
+        if: success() || steps.install-petsc4py.conclusion == 'success'
         run: |
           . venv-petsctools/bin/activate
           pytest
