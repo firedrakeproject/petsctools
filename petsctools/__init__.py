@@ -9,10 +9,9 @@ from .config import (  # noqa: F401
 )
 from .exceptions import PetscToolsException  # noqa: F401
 from .options import flatten_parameters  # noqa: F401
-
-# Now conditionally import the functions that depend on petsc4py
 from .utils import PETSC4PY_INSTALLED
 
+# Now conditionally import the functions that depend on petsc4py
 if PETSC4PY_INSTALLED:
     from .config import get_blas_library  # noqa: F401
     from .init import (  # noqa: F401
@@ -21,5 +20,3 @@ if PETSC4PY_INSTALLED:
         init,
     )
     from .options import OptionsManager  # noqa: F401
-
-del PETSC4PY_INSTALLED
