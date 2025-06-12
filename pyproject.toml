@@ -3,7 +3,7 @@ name = "petsctools"
 version = "2025.5.0.dev0"
 description = "Pythonic extensions for petsc4py and slepc4py"
 readme = "README.md"
-license = "GPL-3.0-or-later"
+license = "LGPL-3.0-or-later"
 maintainers = [
   {name = "Connor J. Ward", email = "c.ward20@imperial.ac.uk"},
 ]
