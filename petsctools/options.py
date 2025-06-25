@@ -2,7 +2,8 @@ import contextlib
 import itertools
 import warnings
 
-from petsctools import utils
+from petsctools.utils import PETSC4PY_INSTALLED
+from .exceptions import PetscToolsException
 
 
 def flatten_parameters(parameters, sep="_"):
@@ -73,7 +74,7 @@ def flatten_parameters(parameters, sep="_"):
     return new
 
 
-if utils.PETSC4PY_INSTALLED:
+if PETSC4PY_INSTALLED:
     from petsc4py import PETSc
 
     class OptionsManager:
@@ -197,3 +198,161 @@ if utils.PETSC4PY_INSTALLED:
             finally:
                 for k in self.to_delete:
                     del self.options_object[self.options_prefix + k]
+
+
+    def obj2str(obj):
+        """Return a string with a PETSc object type and prefix.
+
+        Parameters
+        ----------
+        obj : petsc4py.PETSc.Object
+            The object to stringify.
+
+        Returns
+        -------
+        obj : petsc4py.PETSc.Object
+            The original object.
+        """
+        return f" {type(obj).__name__} ({obj.getOptionsPrefix()})")
+
+
+    def attach_options(obj, parameters=None,
+                       options_prefix=None):
+        """Set up an OptionsManager and attach it to a PETSc Object.
+
+        Parameters
+        ----------
+        obj : petsc4py.PETSc.Object
+            The object to attach an OptionsManager to.
+        parameters : Optional[dict]
+            The dictionary of parameters to use.
+        options_prefix: Optional[str]
+            The options prefix to use for this object.
+            See the OptionsManager documentation for more detail.
+
+        Returns
+        -------
+        obj : petsc4py.PETSc.Object
+            The original object.
+
+        See Also
+        --------
+        OptionsManager
+        """
+        if has_options(obj):
+            raise PetscToolsException(
+                f"An OptionsManager has already been attached to {obj2str(obj)}")
+
+        options = OptionsManager(
+            parameters=parameters,
+            options_prefix=options_prefix)
+        obj.setAttr("options", options)
+        return obj
+
+
+    def has_options(obj):
+        """Return whether this PETSc object has an OptionsManager attached.
+
+        Parameters
+        ----------
+        obj : petsc4py.PETSc.Object
+            The object which may have an OptionsManager.
+
+        Returns
+        -------
+        object_has_options : bool
+            Whether the object has an OptionsManager.
+        """
+        return "options" in obj.getDict()
+
+
+    def get_options(obj):
+        """Return the OptionsManager attached to this PETSc object.
+
+        Parameters
+        ----------
+        obj : petsc4py.PETSc.Object
+            The object to get the OptionsManager from.
+
+        Returns
+        -------
+        options : OptionsManager
+            The OptionsManager attached to the object.
+
+        Raises
+        ------
+        PetscToolsException
+            If the object does not have an OptionsManager.
+        """
+        if not has_options(obj):
+            raise PetscToolsException(
+                "No OptionsManager attached to {obj2str(obj)}")
+        return obj.getAttr("options")
+
+
+    def set_from_options(obj):
+        """Set up a PETSc object from the options in it's OptionsManager.
+
+        Parameters
+        ----------
+        obj : petsc4py.PETSc.Object
+            The PETSc object to call setFromOptions on.
+
+        Returns
+        -------
+        obj : petsc4py.PETSc.Object
+            The original object.
+
+        Raises
+        ------
+        PetscToolsException
+            If the object does not have an OptionsManager.
+        PetscToolsException
+            If set_from_options has already been called for this object.
+
+        See Also
+        --------
+        OptionsManager.set_from_options
+        """
+        # TODO: Should we be enforcing this strongly? OptionsManager silently
+        # makes set_from_options a no-op after the first call.
+        if is_set_from_options(obj):
+            raise PetscToolsException(
+                f"setFromOptions has already been called for {obj2str(obj)}")
+        get_options(obj).set_from_options(obj)
+        return obj
+
+
+    def is_set_from_options(obj):
+        """Return whether this PETSc object has been set up by the OptionsManager.
+
+        Parameters
+        ----------
+        obj : petsc4py.PETSc.Object
+            The object which may have been set from options.
+
+        Returns
+        -------
+        object_is_set_from_options : bool
+            Whether the object has previously been set from options.
+
+        Raises
+        ------
+        PetscToolsException
+            If the object does not have an OptionsManager.
+        """
+        # TODO: Should this be a method of OptionsManager instead?
+        return get_options(obj)._setfromoptions
+
+
+    @contextmanager
+    def inserted_options(obj):
+        """Context manager inside which the PETSc options database
+        contains the parameters from this object's OptionsManager.
+
+        See Also
+        --------
+        OptionsManager.inserted_options
+        """
+        with get_options(obj).inserted_options():
+            yield
