@@ -1,9 +1,6 @@
 import contextlib
-import functools
 import itertools
 import warnings
-
-from petsctools import utils
 
 
 def flatten_parameters(parameters, sep="_"):
