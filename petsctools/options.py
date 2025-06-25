@@ -1,4 +1,5 @@
 import contextlib
+import functools
 import itertools
 import warnings
 
@@ -73,127 +74,140 @@ def flatten_parameters(parameters, sep="_"):
     return new
 
 
-if utils.PETSC4PY_INSTALLED:
-    from petsc4py import PETSc
+class OptionsManager:
+    """Mixin class that helps with managing setting PETSc options.
 
-    class OptionsManager:
-        # What appeared on the commandline, we should never clear these.
-        # They will override options passed in as a dict if an
-        # options_prefix was supplied.
-        commandline_options = frozenset(PETSc.Options().getAll())
+    Parameters
+    ----------
 
-        options_object = PETSc.Options()
+    parameters :
+        The dictionary of parameters to use.
+    options_prefix :
+        The prefix to look up items in the global options database
+        (may be `None`, in which case only entries from ``parameters``
+        will be considered.  If no trailing underscore is provided,
+        one is appended.  Hence ``foo_`` and ``foo`` are treated
+        equivalently.  As an exception, if the prefix is the empty
+        string, no underscore is appended.
 
-        count = itertools.count()
+    To use this, you must call its constructor to with the parameters
+    you want in the options database.
 
-        """Mixin class that helps with managing setting petsc options.
+    You then call :meth:`set_from_options`, passing the PETSc object
+    you'd like to call ``setFromOptions`` on.  Note that this will
+    actually only call ``setFromOptions`` the first time (so really
+    this parameters object is a once-per-PETSc-object thing).
 
-        :arg parameters: The dictionary of parameters to use.
-        :arg options_prefix: The prefix to look up items in the global
-            options database (may be ``None``, in which case only entries
-            from ``parameters`` will be considered.  If no trailing
-            underscore is provided, one is appended.  Hence ``foo_`` and
-            ``foo`` are treated equivalently.  As an exception, if the
-            prefix is the empty string, no underscore is appended.
+    So that the runtime monitors which look in the options database
+    actually see options, you need to ensure that the options database
+    is populated at the time of a ``SNESSolve`` or ``KSPSolve`` call.
+    Do that using the :meth:`inserted_options` context manager.
 
-        To use this, you must call its constructor to with the parameters
-        you want in the options database.
+    .. code-block:: python3
 
-        You then call :meth:`set_from_options`, passing the PETSc object
-        you'd like to call ``setFromOptions`` on.  Note that this will
-        actually only call ``setFromOptions`` the first time (so really
-        this parameters object is a once-per-PETSc-object thing).
+       with self.inserted_options():
+           self.snes.solve(...)
 
-        So that the runtime monitors which look in the options database
-        actually see options, you need to ensure that the options database
-        is populated at the time of a ``SNESSolve`` or ``KSPSolve`` call.
-        Do that using the :meth:`inserted_options` context manager.
+    This ensures that the options database has the relevant entries
+    for the duration of the ``with`` block, before removing them
+    afterwards.  This is a much more robust way of dealing with the
+    fixed-size options database than trying to clear it out using
+    destructors.
 
-        .. code-block:: python3
+    This object can also be used only to manage insertion and deletion
+    into the PETSc options database, by using the context manager.
+    """
 
-           with self.inserted_options():
-               self.snes.solve(...)
-
-        This ensures that the options database has the relevant entries
-        for the duration of the ``with`` block, before removing them
-        afterwards.  This is a much more robust way of dealing with the
-        fixed-size options database than trying to clear it out using
-        destructors.
-
-        This object can also be used only to manage insertion and deletion
-        into the PETSc options database, by using the context manager.
+    @classmethod
+    def get_commandline_options(cls):
         """
+        What appeared on the commandline, we should never clear these.
+        They will override options passed in as a dict if an
+        options_prefix was supplied.
+        """
+        from petsc4py import PETSc
 
-        def __init__(self, parameters, options_prefix):
-            super().__init__()
-            if parameters is None:
-                parameters = {}
-            else:
-                # Convert nested dicts
-                parameters = flatten_parameters(parameters)
-            if options_prefix is None:
-                self.options_prefix = "firedrake_%d_" % next(self.count)
-                self.parameters = parameters
-                self.to_delete = set(parameters)
-            else:
-                if len(options_prefix) and not options_prefix.endswith("_"):
-                    options_prefix += "_"
-                self.options_prefix = options_prefix
-                # Remove those options from the dict that were passed on
-                # the commandline.
-                self.parameters = {
-                    k: v
-                    for k, v in parameters.items()
-                    if options_prefix + k not in self.commandline_options
-                }
-                self.to_delete = set(self.parameters)
-                # Now update parameters from options, so that they're
-                # available to solver setup (for, e.g., matrix-free).
-                # Can't ask for the prefixed guy in the options object,
-                # since that does not DTRT for flag options.
-                for k, v in self.options_object.getAll().items():
-                    if k.startswith(self.options_prefix):
-                        self.parameters[k[len(self.options_prefix) :]] = v
-            self._setfromoptions = False
+        return frozenset(PETSc.Options().getAll())
 
-        def set_default_parameter(self, key, val):
-            """Set a default parameter value.
+    count = itertools.count()
 
-            :arg key: The parameter name
-            :arg val: The parameter value.
+    def __init__(self, parameters, options_prefix):
+        super().__init__()
+        if parameters is None:
+            parameters = {}
+        else:
+            # Convert nested dicts
+            parameters = flatten_parameters(parameters)
+        if options_prefix is None:
+            self.options_prefix = "firedrake_%d_" % next(self.count)
+            self.parameters = parameters
+            self.to_delete = set(parameters)
+        else:
+            if len(options_prefix) and not options_prefix.endswith("_"):
+                options_prefix += "_"
+            self.options_prefix = options_prefix
+            # Remove those options from the dict that were passed on
+            # the commandline.
+            self.parameters = {
+                k: v
+                for k, v in parameters.items()
+                if options_prefix + k not in self.get_commandline_options()
+            }
+            self.to_delete = set(self.parameters)
+            # Now update parameters from options, so that they're
+            # available to solver setup (for, e.g., matrix-free).
+            # Can't ask for the prefixed guy in the options object,
+            # since that does not DTRT for flag options.
+            for k, v in self.options_object.getAll().items():
+                if k.startswith(self.options_prefix):
+                    self.parameters[k[len(self.options_prefix) :]] = v
+        self._setfromoptions = False
 
-            Ensures that the right thing happens cleaning up the options
-            database.
-            """
-            k = self.options_prefix + key
-            if k not in self.options_object and key not in self.parameters:
-                self.parameters[key] = val
-                self.to_delete.add(key)
+    def set_default_parameter(self, key, val):
+        """Set a default parameter value.
 
-        def set_from_options(self, petsc_obj):
-            """Set up petsc_obj from the options database.
+        :arg key: The parameter name
+        :arg val: The parameter value.
 
-            :arg petsc_obj: The PETSc object to call setFromOptions on.
+        Ensures that the right thing happens cleaning up the options
+        database.
+        """
+        k = self.options_prefix + key
+        if k not in self.options_object and key not in self.parameters:
+            self.parameters[key] = val
+            self.to_delete.add(key)
 
-            Matt says: "Only ever call setFromOptions once".  This
-            function ensures we do so.
-            """
-            if not self._setfromoptions:
-                with self.inserted_options():
-                    petsc_obj.setOptionsPrefix(self.options_prefix)
-                    # Call setfromoptions inserting appropriate options into
-                    # the options database.
-                    petsc_obj.setFromOptions()
-                    self._setfromoptions = True
+    def set_from_options(self, petsc_obj):
+        """Set up petsc_obj from the options database.
 
-        @contextlib.contextmanager
-        def inserted_options(self):
-            """Context manager inside which the petsc options database
-            contains the parameters from this object."""
-            try:
-                for k, v in self.parameters.items():
-                    self.options_object[self.options_prefix + k] = v
-                yield
-            finally:
-                for k in self.to_delete:
-                    del self.options_object[self.options_prefix + k]
+        :arg petsc_obj: The PETSc object to call setFromOptions on.
+
+        Matt says: "Only ever call setFromOptions once".  This
+        function ensures we do so.
+        """
+        if not self._setfromoptions:
+            with self.inserted_options():
+                petsc_obj.setOptionsPrefix(self.options_prefix)
+                # Call setfromoptions inserting appropriate options into
+                # the options database.
+                petsc_obj.setFromOptions()
+                self._setfromoptions = True
+
+    @contextlib.contextmanager
+    def inserted_options(self):
+        """Context manager inside which the petsc options database
+        contains the parameters from this object."""
+        try:
+            for k, v in self.parameters.items():
+                self.options_object[self.options_prefix + k] = v
+            yield
+        finally:
+            for k in self.to_delete:
+                del self.options_object[self.options_prefix + k]
+
+    @property
+    def options_object(self):
+        from petsc4py import PETSc
+
+        return PETSc.Options()
+
