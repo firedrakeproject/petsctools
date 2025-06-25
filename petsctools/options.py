@@ -1,4 +1,5 @@
 import contextlib
+import functools
 import itertools
 import warnings
 
@@ -202,7 +203,7 @@ class OptionsManager:
             for k in self.to_delete:
                 del self.options_object[self.options_prefix + k]
 
-    @property
+    @functools.cached_property
     def options_object(self):
         from petsc4py import PETSc
 
