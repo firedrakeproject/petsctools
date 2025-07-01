@@ -236,7 +236,7 @@ if PETSC4PY_INSTALLED:
                 for k in self.to_delete:
                     del self.options_object[self.options_prefix + k]
 
-    def obj2str(obj):
+    def petscobj2str(obj):
         """Return a string with a PETSc object type and prefix.
 
         Parameters
@@ -277,7 +277,7 @@ if PETSC4PY_INSTALLED:
         if has_options(obj):
             raise PetscToolsException(
                 "An OptionsManager has already been"
-                f"  attached to {obj2str(obj)}")
+                f"  attached to {petscobj2str(obj)}")
 
         options = OptionsManager(
             parameters=parameters,
@@ -320,7 +320,7 @@ if PETSC4PY_INSTALLED:
         """
         if not has_options(obj):
             raise PetscToolsException(
-                "No OptionsManager attached to {obj2str(obj)}")
+                "No OptionsManager attached to {petscobj2str(obj)}")
         return obj.getAttr("options")
 
     def set_from_options(obj):
@@ -351,7 +351,7 @@ if PETSC4PY_INSTALLED:
         # makes set_from_options a no-op after the first call.
         if is_set_from_options(obj):
             raise PetscToolsException(
-                f"setFromOptions has already been called for {obj2str(obj)}")
+                f"setFromOptions has already been called for {petscobj2str(obj)}")
         get_options(obj).set_from_options(obj)
         return obj
 
