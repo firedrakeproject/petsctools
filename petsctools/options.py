@@ -3,6 +3,22 @@ import functools
 import itertools
 import warnings
 
+from petsctools.exceptions import PetscToolsNotInitialisedException
+
+
+_commandline_options = None
+
+
+def get_commandline_options() -> frozenset:
+    """Return the PETSc options passed on the command line."""
+    if _commandline_options is None:
+        raise PetscToolsNotInitialisedException(
+            "'petsctools.init' has not been called so the command line options "
+            "have not been set"
+        )
+    return _commandline_options
+
+
 
 def flatten_parameters(parameters, sep="_"):
     """Flatten a nested parameters dict, joining keys with sep.
@@ -115,17 +131,6 @@ class OptionsManager:
     This object can also be used only to manage insertion and deletion
     into the PETSc options database, by using the context manager.
     """
-
-    @classmethod
-    def get_commandline_options(cls):
-        """
-        What appeared on the commandline, we should never clear these.
-        They will override options passed in as a dict if an
-        options_prefix was supplied.
-        """
-        from petsc4py import PETSc
-
-        return frozenset(PETSc.Options().getAll())
 
     count = itertools.count()
 
