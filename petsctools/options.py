@@ -154,7 +154,7 @@ class OptionsManager:
             self.parameters = {
                 k: v
                 for k, v in parameters.items()
-                if options_prefix + k not in self.get_commandline_options()
+                if options_prefix + k not in get_commandline_options()
             }
             self.to_delete = set(self.parameters)
             # Now update parameters from options, so that they're
