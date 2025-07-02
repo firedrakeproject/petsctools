@@ -327,7 +327,7 @@ if PETSC4PY_INSTALLED:
         return obj.getAttr("options")
 
     def set_from_options(obj):
-        """Set up a PETSc object from the options in it's OptionsManager.
+        """Set up a PETSc object from the options in its OptionsManager.
 
         Parameters
         ----------
