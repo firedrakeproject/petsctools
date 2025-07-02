@@ -89,37 +89,43 @@ if PETSC4PY_INSTALLED:
 
         """Class that helps with managing setting petsc options.
 
-        :arg parameters: The dictionary of parameters to use.
-        :arg options_prefix: The prefix to look up items in the global
-            options database (may be ``None``, in which case only entries
-            from ``parameters`` will be considered.  If no trailing
-            underscore is provided, one is appended.  Hence ``foo_`` and
-            ``foo`` are treated equivalently.  As an exception, if the
-            prefix is the empty string, no underscore is appended.
+        Parameters
+        ----------
+        parameters: dict
+            The dictionary of parameters to use.
+        options_prefix: str
+            The prefix to look up items in the global options database
+            (may be ``None``, in which case only entries from ``parameters``
+            will be considered.
+            If no trailing underscore is provided, one is appended. Hence
+            ``foo_`` and ``foo`` are treated equivalently. As an exception,
+            if the prefix is the empty string, no underscore is appended.
 
-        To use this, you must call its constructor with the parameters
-        you want in the options database, and optionally a prefix to
-        extract options from the global database.
+        The recommended way to use the ``OptionsManager`` is by using the
+        ``attach_options``, ``set_from_options``, and ``inserted_options``
+        free functions. These functions ensure that each ``OptionsManager``
+        is associated to a single PETSc object.
 
-        You then call :meth:`set_from_options`, passing the PETSc object
-        you'd like to call ``setFromOptions`` on.  Note that this will
-        actually only call ``setFromOptions`` the first time (so really
-        this parameters object is a once-per-PETSc-object thing).
+        For detail on the previous approach of using ``OptionsManager``
+        as a mixin class (where the user takes responsibility for ensuring
+        a association with a single PETSc object), see below.
 
-        This class can either be used as a standalone class attached to
-        a specific PETSc object using the ``attach_options`` and related
-        free functions, or as a mixin class in which case the user must
-        ensure that each ``OptionsManager`` instance is associated only
-        to one specific PETSc object.
-
-        So that the runtime monitors which look in the options database
-        actually see options, you need to ensure that the options database
-        is populated at the time of a ``SNESSolve`` or ``KSPSolve`` call.
-        Do that using the :meth:`inserted_options` context manager.
-
-        The recommended way to use this class is via the
-        provided free functions, which ensures a one-to-one
-        association between a PETSc object and an OptionsManager.
+        To use the ``OptionsManager``:
+        1. Pass a PETSc object, a parameters dictionary, and optionally
+           an options prefix to ``attach_options``. This will create an
+           ``OptionsManager`` and set the prefix of the PETSc object,
+           but will not yet set it up.
+        2. Once the object is ready, pass it to ``set_from_options``,
+           which will insert the solver options into ``PETSc.Options``
+           and call ``obj.setFromOptions``.
+        3. The ``inserted_options`` context manager must be used when
+           calling methods on the PETSc object within which solver
+           options will be read, for example ``solve``.
+           This will insert the provided ``parameters`` into PETSc's
+           global options dictionary within the context manager, and
+           remove them afterwards. This ensures that the global options
+           dictionary will not grow uncontrollably if many ``OptionsManager``
+           instances are used.
 
         .. code-block:: python3
 
@@ -128,6 +134,9 @@ if PETSC4PY_INSTALLED:
 
             attach_options(ksp, parameters=parameters,
                            options_prefix=prefix)
+
+            # ...
+
             set_from_options(ksp)
 
             # ...
@@ -141,6 +150,22 @@ if PETSC4PY_INSTALLED:
         .. code-block:: python3
 
             N = get_options(ksp).getInt(prefix+"N")
+
+        Using ``OptionsManager`` as a mixin class:
+
+        To use this, you must call its constructor with the parameters
+        you want in the options database, and optionally a prefix to
+        extract options from the global database.
+
+        You then call :meth:`set_from_options`, passing the PETSc object
+        you'd like to call ``setFromOptions`` on.  Note that this will
+        actually only call ``setFromOptions`` the first time (so really
+        this parameters object is a once-per-PETSc-object thing).
+
+        So that the runtime monitors which look in the options database
+        actually see options, you need to ensure that the options database
+        is populated at the time of a ``SNESSolve`` or ``KSPSolve`` call.
+        Do that using the :meth:`inserted_options` context manager.
 
         If using as a mixin class, call the ``OptionsManager`` methods
         directly:
@@ -160,6 +185,15 @@ if PETSC4PY_INSTALLED:
 
         This object can also be used only to manage insertion and deletion
         into the PETSc options database, by using the context manager.
+
+        See Also
+        --------
+        attach_options
+        has_options
+        get_options
+        set_from_options
+        is_set_from_options
+        inserted_options
         """
 
         def __init__(self, parameters, options_prefix):
@@ -302,6 +336,10 @@ if PETSC4PY_INSTALLED:
         -------
         object_has_options : bool
             Whether the object has an OptionsManager.
+
+        See Also
+        --------
+        OptionsManager
         """
         return (
             "options" in obj.getDict()
@@ -325,6 +363,10 @@ if PETSC4PY_INSTALLED:
         ------
         PetscToolsException
             If the object does not have an OptionsManager.
+
+        See Also
+        --------
+        OptionsManager
         """
         if not has_options(obj):
             raise PetscToolsException(
@@ -353,6 +395,7 @@ if PETSC4PY_INSTALLED:
 
         See Also
         --------
+        OptionsManager
         OptionsManager.set_from_options
         """
         if is_set_from_options(obj):
@@ -380,6 +423,10 @@ if PETSC4PY_INSTALLED:
         ------
         PetscToolsException
             If the object does not have an OptionsManager.
+
+        See Also
+        --------
+        OptionsManager
         """
         return get_options(obj)._setfromoptions
 
@@ -390,6 +437,7 @@ if PETSC4PY_INSTALLED:
 
         See Also
         --------
+        OptionsManager
         OptionsManager.inserted_options
         """
         with get_options(obj).inserted_options():
