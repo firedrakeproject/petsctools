@@ -213,6 +213,8 @@ if PETSC4PY_INSTALLED:
 
             :arg petsc_obj: The PETSc object to call setFromOptions on.
 
+            Raises PetscToolsException if this method has already been called.
+
             Matt says: "Only ever call setFromOptions once".  This
             function ensures we do so.
             """
@@ -223,6 +225,9 @@ if PETSC4PY_INSTALLED:
                     # the options database.
                     petsc_obj.setFromOptions()
                     self._setfromoptions = True
+            else:
+                raise PetscToolsException(
+                    "setFromOptions has already been called.")
 
         @contextlib.contextmanager
         def inserted_options(self):
@@ -350,8 +355,6 @@ if PETSC4PY_INSTALLED:
         --------
         OptionsManager.set_from_options
         """
-        # TODO: Should we be enforcing this strongly? OptionsManager silently
-        # makes set_from_options a no-op after the first call.
         if is_set_from_options(obj):
             raise PetscToolsException(
                 "setFromOptions has already been"
