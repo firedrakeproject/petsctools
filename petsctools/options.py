@@ -246,8 +246,8 @@ if PETSC4PY_INSTALLED:
 
         Returns
         -------
-        obj : petsc4py.PETSc.Object
-            The original object.
+        name : str
+            The stringified name of the object
         """
         return f"{type(obj).__name__} ({obj.getOptionsPrefix()})"
 
@@ -298,7 +298,10 @@ if PETSC4PY_INSTALLED:
         object_has_options : bool
             Whether the object has an OptionsManager.
         """
-        return "options" in obj.getDict()
+        return (
+            "options" in obj.getDict()
+            and isinstance(obj.getAttr("options"), OptionsManager)
+        )
 
     def get_options(obj):
         """Return the OptionsManager attached to this PETSc object.
@@ -374,7 +377,6 @@ if PETSC4PY_INSTALLED:
         PetscToolsException
             If the object does not have an OptionsManager.
         """
-        # TODO: Should this be a method of OptionsManager instead?
         return get_options(obj)._setfromoptions
 
     @contextlib.contextmanager
