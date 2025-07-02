@@ -354,7 +354,8 @@ if PETSC4PY_INSTALLED:
         # makes set_from_options a no-op after the first call.
         if is_set_from_options(obj):
             raise PetscToolsException(
-                f"setFromOptions has already been called for {petscobj2str(obj)}")
+                "setFromOptions has already been"
+                f" called for {petscobj2str(obj)}")
         get_options(obj).set_from_options(obj)
         return obj
 
