@@ -3,7 +3,7 @@ import itertools
 import warnings
 
 from petsctools.utils import PETSC4PY_INSTALLED
-from .exceptions import PetscToolsException
+from .exceptions import PetscToolsException, PetscToolsWarning
 
 
 def flatten_parameters(parameters, sep="_"):
@@ -247,7 +247,7 @@ if PETSC4PY_INSTALLED:
 
             :arg petsc_obj: The PETSc object to call setFromOptions on.
 
-            Raises PetscToolsException if this method has already been called.
+            Raises PetscToolsWarning if this method has already been called.
 
             Matt says: "Only ever call setFromOptions once".  This
             function ensures we do so.
@@ -260,7 +260,7 @@ if PETSC4PY_INSTALLED:
                     petsc_obj.setFromOptions()
                     self._setfromoptions = True
             else:
-                raise PetscToolsException(
+                raise PetscToolsWarning(
                     "setFromOptions has already been called.")
 
         @contextlib.contextmanager
@@ -390,7 +390,7 @@ if PETSC4PY_INSTALLED:
         ------
         PetscToolsException
             If the object does not have an OptionsManager.
-        PetscToolsException
+        PetscToolsWarning
             If set_from_options has already been called for this object.
 
         See Also
@@ -399,7 +399,7 @@ if PETSC4PY_INSTALLED:
         OptionsManager.set_from_options
         """
         if is_set_from_options(obj):
-            raise PetscToolsException(
+            raise PetscToolsWarning(
                 "setFromOptions has already been"
                 f" called for {petscobj2str(obj)}")
         get_options(obj).set_from_options(obj)
