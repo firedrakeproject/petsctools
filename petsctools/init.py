@@ -30,7 +30,10 @@ def init(argv=None, *, version_spec=""):
 
     # Save the command line options so they may be inspected later
     from petsc4py import PETSc
-    petsctools.options._commandline_options = frozenset(PETSc.Options().getAll())
+
+    petsctools.options._commandline_options = frozenset(
+        PETSc.Options().getAll()
+    )
 
 
 def check_environment_matches_petsc4py_config():

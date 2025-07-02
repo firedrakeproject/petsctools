@@ -13,11 +13,10 @@ def get_commandline_options() -> frozenset:
     """Return the PETSc options passed on the command line."""
     if _commandline_options is None:
         raise PetscToolsNotInitialisedException(
-            "'petsctools.init' has not been called so the command line options "
-            "have not been set"
+            "'petsctools.init' has not been called so the command line "
+            "options have not been set"
         )
     return _commandline_options
-
 
 
 def flatten_parameters(parameters, sep="_"):
@@ -213,4 +212,3 @@ class OptionsManager:
         from petsc4py import PETSc
 
         return PETSc.Options()
-
