@@ -265,8 +265,9 @@ class OptionsManager:
                 petsc_obj.setFromOptions()
                 self._setfromoptions = True
         else:
-            raise PetscToolsWarning(
-                "setFromOptions has already been called")
+            warnings.warn(
+                "setFromOptions has already been called",
+                PetscToolsWarning)
 
     @contextlib.contextmanager
     def inserted_options(self):
