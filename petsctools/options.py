@@ -317,11 +317,6 @@ def attach_options(obj, parameters=None,
         The options prefix to use for this object.
         See the OptionsManager documentation for more detail.
 
-    Returns
-    -------
-    obj : petsc4py.PETSc.Object
-        The original object.
-
     See Also
     --------
     OptionsManager
@@ -335,7 +330,6 @@ def attach_options(obj, parameters=None,
         parameters=parameters,
         options_prefix=options_prefix)
     obj.setAttr("options", options)
-    return obj
 
 
 def has_options(obj):
@@ -410,9 +404,10 @@ def set_from_options(obj):
     OptionsManager.set_from_options
     """
     if is_set_from_options(obj):
-        raise PetscToolsWarning(
+        warnings.warn(
             "setFromOptions has already been"
-            f" called for {petscobj2str(obj)}")
+            f" called for {petscobj2str(obj)}",
+            PetscToolsWarning)
     get_options(obj).set_from_options(obj)
 
 
