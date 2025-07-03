@@ -397,11 +397,6 @@ def set_from_options(obj):
     obj : petsc4py.PETSc.Object
         The PETSc object to call setFromOptions on.
 
-    Returns
-    -------
-    obj : petsc4py.PETSc.Object
-        The original object.
-
     Raises
     ------
     PetscToolsException
@@ -419,7 +414,6 @@ def set_from_options(obj):
             "setFromOptions has already been"
             f" called for {petscobj2str(obj)}")
     get_options(obj).set_from_options(obj)
-    return obj
 
 
 def is_set_from_options(obj):
