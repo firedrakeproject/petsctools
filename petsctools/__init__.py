@@ -20,6 +20,7 @@ if PETSC4PY_INSTALLED:
         init,
     )
     from .options import (  # noqa: F401
+        get_commandline_options,
         OptionsManager,
         petscobj2str,
         attach_options,
