@@ -5,6 +5,7 @@ import warnings
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 
+import petsctools.options
 from petsctools.exceptions import PetscToolsException
 
 
@@ -26,6 +27,13 @@ def init(argv=None, *, version_spec=""):
     petsc4py.init(argv)
     check_environment_matches_petsc4py_config()
     check_petsc_version(version_spec)
+
+    # Save the command line options so they may be inspected later
+    from petsc4py import PETSc
+
+    petsctools.options._commandline_options = frozenset(
+        PETSc.Options().getAll()
+    )
 
 
 def check_environment_matches_petsc4py_config():
