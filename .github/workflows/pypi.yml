@@ -10,7 +10,7 @@ on:
 
   workflow_dispatch:
     inputs:
-      source_ref:
+      ref:
         description: The Git ref to checkout
         type: string
         required: true
