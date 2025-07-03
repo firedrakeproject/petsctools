@@ -89,14 +89,14 @@ def flatten_parameters(parameters, sep="_"):
 
 
 class OptionsManager:
-    """Class that helps with managing setting petsc options.
+    """Class that helps with managing setting PETSc options.
 
     Parameters
     ----------
 
     parameters: dict
         The dictionary of parameters to use.
-    options_prefix: str
+    options_prefix: str or None
         The prefix to look up items in the global options database
         (may be ``None``, in which case only entries from ``parameters``
         will be considered.
@@ -111,11 +111,11 @@ class OptionsManager:
 
     For detail on the previous approach of using ``OptionsManager``
     as a mixin class (where the user takes responsibility for ensuring
-    a association with a single PETSc object), see below.
+    an association with a single PETSc object), see below.
 
     To use the ``OptionsManager``:
-    1. Pass a PETSc object, a parameters dictionary, and optionally
-       an options prefix to ``attach_options``. This will create an
+    1. Pass a PETSc object a parameters dictionary, and optionally
+       an options prefix, to ``attach_options``. This will create an
        ``OptionsManager`` and set the prefix of the PETSc object,
        but will not yet set it up.
     2. Once the object is ready, pass it to ``set_from_options``,
