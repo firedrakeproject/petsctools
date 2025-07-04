@@ -19,4 +19,14 @@ if PETSC4PY_INSTALLED:
         InvalidPetscVersionException,
         init,
     )
-    from .options import OptionsManager, get_commandline_options  # noqa: F401
+    from .options import (  # noqa: F401
+        get_commandline_options,
+        OptionsManager,
+        petscobj2str,
+        attach_options,
+        has_options,
+        get_options,
+        set_from_options,
+        is_set_from_options,
+        inserted_options,
+    )
