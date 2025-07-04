@@ -25,7 +25,9 @@ def pytest_collection_modifyitems(session, config, items):
             item.get_closest_marker("skippetsc4py") is not None
             and petsc4py_installed
         ):
-            item.add_marker(pytest.mark.skip(reason="Test requires not having petsc4py"))
+            item.add_marker(
+                pytest.mark.skip(reason="Test requires not having petsc4py")
+            )
 
         if (
             item.get_closest_marker("skipnopetsc4py") is not None

@@ -33,6 +33,7 @@ if PETSC4PY_INSTALLED:
         inserted_options,
     )
 else:
+
     def __getattr__(name):
         petsc4py_attrs = {
             "get_blas_library",
@@ -55,4 +56,6 @@ else:
                 "petsc4py is not available"
             )
         else:
-            raise AttributeError(f"Module '{__name__}' has no attribute '{name}'")
+            raise AttributeError(
+                f"Module '{__name__}' has no attribute '{name}'"
+            )
