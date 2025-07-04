@@ -315,7 +315,6 @@ def attach_options(obj, parameters=None,
         The dictionary of parameters to use.
     options_prefix: Optional[str]
         The options prefix to use for this object.
-        See the OptionsManager documentation for more detail.
 
     See Also
     --------
@@ -383,18 +382,37 @@ def get_options(obj):
     return obj.getAttr("options")
 
 
-def set_from_options(obj):
+def set_from_options(obj, parameters=None,
+                     options_prefix=None):
     """Set up a PETSc object from the options in its OptionsManager.
+
+    Calls ``obj.setOptionsPrefix`` and ``obj.setFromOptions`` whilst
+    inside the ``inserted_options`` context manager, which ensures
+    that all options from ``parameters`` are in the global
+    ``PETSc.Options`` dictionary.
+
+    If neither ``parameters`` nor ``options_prefix`` are provided,
+    assumes that ``attach_options`` has been called with ``obj``.
+    If either ``parameters`` and/or ``options_prefix`` are provided,
+    then ``attach_options`` is called before setting up the ``obj``.
 
     Parameters
     ----------
     obj : petsc4py.PETSc.Object
         The PETSc object to call setFromOptions on.
+    parameters : Optional[dict]
+        The dictionary of parameters to use.
+    options_prefix: Optional[str]
+        The options prefix to use for this object.
 
     Raises
     ------
     PetscToolsException
-        If the object does not have an OptionsManager.
+        If the neither ``parameters`` nor ``options_prefix`` are
+        provided but ``obj`` does not have an OptionsManager attached.
+    PetscToolsException
+        If the either ``parameters`` or ``options_prefix`` are provided
+        but ``obj`` already has an OptionsManager attached.
     PetscToolsWarning
         If set_from_options has already been called for this object.
 
@@ -403,11 +421,27 @@ def set_from_options(obj):
     OptionsManager
     OptionsManager.set_from_options
     """
+    if has_options(obj):
+        if parameters is not None or options_prefix is not None:
+            raise PetscToolsException(
+                f"{petscobj2str(obj)} already has an OptionsManager"
+                " but parameters and/or options_prefix were provided"
+                " to set_from_options")
+    else:
+        if parameters is None and options_prefix is None:
+            raise PetscToolsException(
+                f"{petscobj2str(obj)} does not have an OptionsManager"
+                " but neither parameters nor options_prefix were"
+                " provided to set_from_options")
+        attach_options(obj, parameters=parameters,
+                       options_prefix=options_prefix)
+
     if is_set_from_options(obj):
         warnings.warn(
             "setFromOptions has already been"
             f" called for {petscobj2str(obj)}",
             PetscToolsWarning)
+
     get_options(obj).set_from_options(obj)
 
 
