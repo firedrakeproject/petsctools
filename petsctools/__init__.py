@@ -21,7 +21,17 @@ if PETSC4PY_INSTALLED:
         InvalidPetscVersionException,
         init,
     )
-    from .options import OptionsManager  # noqa: F401
+    from .options import (  # noqa: F401
+        get_commandline_options,
+        OptionsManager,
+        petscobj2str,
+        attach_options,
+        has_options,
+        get_options,
+        set_from_options,
+        is_set_from_options,
+        inserted_options,
+    )
 else:
     def __getattr__(name):
         petsc4py_attrs = {
@@ -29,7 +39,15 @@ else:
             "InvalidEnvironmentException",
             "InvalidPetscVersionException",
             "init",
+            "get_commandline_options",
             "OptionsManager",
+            "petscobj2str",
+            "attach_options",
+            "has_options",
+            "get_options",
+            "set_from_options",
+            "is_set_from_options",
+            "inserted_options",
         }
         if name in petsc4py_attrs:
             raise ImportError(
