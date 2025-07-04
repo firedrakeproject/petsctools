@@ -33,7 +33,7 @@ else:
         }
         if name in petsc4py_attrs:
             raise ImportError(
-                f"Cannot load '{name}' from module '{__name__}' because petsc4py "
-                "is not available"
+                f"Cannot load '{name}' from module '{__name__}' because "
+                "petsc4py is not available"
             )
         raise AttributeError(f"Module '{__name__}' has no attribute '{name}'")
