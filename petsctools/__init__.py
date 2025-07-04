@@ -54,4 +54,5 @@ else:
                 f"Cannot load '{name}' from module '{__name__}' because "
                 "petsc4py is not available"
             )
-        raise AttributeError(f"Module '{__name__}' has no attribute '{name}'")
+        else:
+            raise AttributeError(f"Module '{__name__}' has no attribute '{name}'")
