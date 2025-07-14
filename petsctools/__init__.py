@@ -53,7 +53,9 @@ else:
         if name in petsc4py_attrs:
             raise ImportError(
                 f"Cannot load '{name}' from module '{__name__}' because "
-                "petsc4py is not available"
+                "petsc4py is not available.\n"
+                "If this error appears during pip install then you may have"
+                "forgotten to pass --no-build-isolation".
             )
         else:
             raise AttributeError(
