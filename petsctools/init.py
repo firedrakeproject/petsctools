@@ -1,6 +1,7 @@
 import os
 import sys
 import warnings
+from pathlib import Path
 
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
@@ -43,7 +44,7 @@ def check_environment_matches_petsc4py_config():
     petsc_dir = config["PETSC_DIR"]
     petsc_arch = config["PETSC_ARCH"]
     if (
-        os.environ.get("PETSC_DIR", petsc_dir) != petsc_dir
+        Path(os.environ.get("PETSC_DIR", petsc_dir)) != Path(petsc_dir)
         or os.environ.get("PETSC_ARCH", petsc_arch) != petsc_arch
     ):
         raise InvalidEnvironmentException(
