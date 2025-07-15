@@ -11,7 +11,9 @@ from .exceptions import PetscToolsException  # noqa: F401
 from .options import flatten_parameters  # noqa: F401
 from .utils import PETSC4PY_INSTALLED
 
-# Now conditionally import the functions that depend on petsc4py
+# Now conditionally import the functions that depend on petsc4py. If petsc4py
+# is not available then attempting to access these attributes will raise an
+# informative error.
 if PETSC4PY_INSTALLED:
     from .config import get_blas_library  # noqa: F401
     from .init import (  # noqa: F401
@@ -30,3 +32,32 @@ if PETSC4PY_INSTALLED:
         is_set_from_options,
         inserted_options,
     )
+else:
+
+    def __getattr__(name):
+        petsc4py_attrs = {
+            "get_blas_library",
+            "InvalidEnvironmentException",
+            "InvalidPetscVersionException",
+            "init",
+            "get_commandline_options",
+            "OptionsManager",
+            "petscobj2str",
+            "attach_options",
+            "has_options",
+            "get_options",
+            "set_from_options",
+            "is_set_from_options",
+            "inserted_options",
+        }
+        if name in petsc4py_attrs:
+            raise ImportError(
+                f"Cannot load '{name}' from module '{__name__}' because "
+                "petsc4py is not available.\n"
+                "If this error appears during pip install then you may have "
+                "forgotten to pass --no-build-isolation"
+            )
+        else:
+            raise AttributeError(
+                f"Module '{__name__}' has no attribute '{name}'"
+            )
