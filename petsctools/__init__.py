@@ -31,6 +31,7 @@ if PETSC4PY_INSTALLED:
         set_from_options,
         is_set_from_options,
         inserted_options,
+        set_default_parameter,
     )
 else:
 
@@ -49,6 +50,7 @@ else:
             "set_from_options",
             "is_set_from_options",
             "inserted_options",
+            "set_default_parameter",
         }
         if name in petsc4py_attrs:
             raise ImportError(
