@@ -382,6 +382,31 @@ def get_options(obj):
     return obj.getAttr("options")
 
 
+def set_default_parameter(obj, key, val):
+    """Set a default parameter value in the OptionsManager of a PETSc object.
+
+    Parameters
+    ----------
+    obj : petsc4py.PETSc.Object
+        The object to get the OptionsManager from.
+    key : str
+        The options parameter name
+    val : Any
+        The options parameter value
+
+    Raises
+    ------
+    PetscToolsException
+        If the object does not have an OptionsManager.
+
+    See Also
+    --------
+    OptionsManager
+    OptionsManager.set_default_parameter
+    """
+    get_options(obj).set_default_parameter(key, val)
+
+
 def set_from_options(obj, parameters=None,
                      options_prefix=None):
     """Set up a PETSc object from the options in its OptionsManager.
