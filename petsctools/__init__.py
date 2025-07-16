@@ -32,6 +32,14 @@ if PETSC4PY_INSTALLED:
         is_set_from_options,
         inserted_options,
     )
+    from .reasons import (  # noqa: F401
+        PCReasons,
+        KSPReasons,
+        SNESReasons,
+        TAOReasons,
+        TAOLineSearchReasons,
+        TSReasons,
+    )
 else:
 
     def __getattr__(name):
@@ -49,6 +57,12 @@ else:
             "set_from_options",
             "is_set_from_options",
             "inserted_options",
+            "PCReasons",
+            "KSPReasons",
+            "SNESReasons",
+            "TAOReasons",
+            "TAOLineSearchReasons",
+            "TSReasons",
         }
         if name in petsc4py_attrs:
             raise ImportError(
