@@ -27,7 +27,7 @@ slepc4py = ["slepc4py"]
 Repository = "https://github.com/firedrakeproject/petsctools"
 
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=77.0.3"]
 build-backend = "setuptools.build_meta"
 
 [dependency-groups]
