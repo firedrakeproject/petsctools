@@ -36,6 +36,8 @@ def init(argv=None, *, version_spec=""):
         PETSc.Options().getAll()
     )
 
+    return PETSc
+
 
 def check_environment_matches_petsc4py_config():
     import petsc4py
