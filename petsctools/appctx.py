@@ -1,7 +1,7 @@
 import itertools
 
 
-class Appctx:
+class AppContext:
     def __init__(self):
         self._count = itertools.count()
         self._data = {}
