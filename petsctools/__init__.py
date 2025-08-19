@@ -10,6 +10,7 @@ from .config import (  # noqa: F401
 from .exceptions import PetscToolsException  # noqa: F401
 from .options import flatten_parameters  # noqa: F401
 from .utils import PETSC4PY_INSTALLED
+from .appctx import AppContext
 
 # Now conditionally import the functions that depend on petsc4py. If petsc4py
 # is not available then attempting to access these attributes will raise an
