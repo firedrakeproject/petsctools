@@ -10,7 +10,11 @@ def test_appctx():
 
     param = 10
     key = appctx.add(param)
-    PETSc.Options()['solver_param'] = key
+    options = PETSc.Options()
+    options['solver_param'] = key
+
+    # Can we get the key string back?
+    assert str(appctx.getKey('solver_param')) == options['solver_param']
 
     # Can we access param via the prefixed option?
     prm = appctx.get('solver_param')

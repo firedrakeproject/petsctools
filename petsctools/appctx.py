@@ -60,34 +60,45 @@ class AppContext:
         self._count = itertools.count()
         self._data = {}
 
-    def _keygen(self, key=None):
+    def _keygen(self):
         """
-        Generate a new internal key, optionally with a given value.
+        Generate a new unique internal key.
 
         This should not called directly by the user.
-
-        Parameters
-        ----------
-        key : Optional[int]
-            The value of the key.
-
-        Returns
-        -------
-        new_key : AppContextKey
-            A new internal key.
         """
-        return AppContextKey(next(self._count) if key is None else key)
+        return AppContextKey(next(self._count))
 
-    def _option_to_key(self, option):
+    def _to_key(self, option):
         """
         Return the internal key for the PETSc option `option`.
         If `option` is already an AppContextKey, `option` is returned.
 
         This should not called directly by the user.
+        """
+        if isinstance(option, int):
+            return AppContextKey(option)
+        else:
+            return self.getKey(option)
+
+    @cached_property
+    def _missing_key(self):
+        """
+        Key instance representing a missing AppContext entry.
+
+        PETSc requires the default value for Options.getObj()
+        to be the correct type, so we need a dummy key.
+
+        This should not called directly by the user.
+        """
+        return self._keygen()
+
+    def getKey(self, option):
+        """
+        Return the internal key for the PETSc option `option`.
 
         Parameters
         ----------
-        option : Union[str, AppContextKey]
+        option : str
             The PETSc option.
 
         Returns
@@ -95,22 +106,8 @@ class AppContext:
         key : AppContextKey
             An internal key corresponding to `option`.
         """
-        if isinstance(option, int):
-            return AppContextKey(option)
         key = self.options_object.getInt(option, self._missing_key)
-        return self._keygen(key)
-
-    @cached_property
-    def _missing_key(self):
-        """
-        Key instance representing a missing AppContext entry.
-
-        This should not called directly by the user.
-
-        PETSc requires the default value for Options.getObj()
-        to be the correct type, so we need a dummy key.
-        """
-        return self._keygen()
+        return AppContextKey(key)
 
     def add(self, val):
         """
@@ -154,7 +151,7 @@ class AppContext:
             If the AppContext does contain a value for `option`.
         """
         try:
-            return self._data[self._option_to_key(option)]
+            return self._data[self._to_key(option)]
         except KeyError:
             raise PetscToolsAppctxException(
                 f"AppContext does not have an entry for {option}")
@@ -176,7 +173,7 @@ class AppContext:
         val : Any
             The value for the key `option`, or `default`.
         """
-        key = self._option_to_key(option)
+        key = self._to_key(option)
         if key == self._missing_key:
             return default
         return self._data[key]
