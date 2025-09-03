@@ -2,3 +2,6 @@ petsctools/config.ini
 
 */__pycache__
 *.egg-info
+
+docs/build
+docs/source/petsctools*.rst

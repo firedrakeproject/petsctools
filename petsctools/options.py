@@ -93,7 +93,6 @@ class OptionsManager:
 
     Parameters
     ----------
-
     parameters: dict
         The dictionary of parameters to use.
     options_prefix: str or None
