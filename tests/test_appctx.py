@@ -1,5 +1,6 @@
 import pytest
 import petsctools
+from petsctools.exceptions import PetscToolsAppctxException
 
 
 @pytest.mark.skipnopetsc4py
@@ -28,6 +29,5 @@ def test_appctx():
     assert prm is default
 
     # Will an invalid key raise an error
-    from petsctools.appctx import PetscToolsAppctxException
     with pytest.raises(PetscToolsAppctxException):
         appctx['param']
