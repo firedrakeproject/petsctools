@@ -9,9 +9,8 @@ def test_appctx():
     appctx = petsctools.AppContext()
 
     param = 10
-    key = appctx.add(param)
     options = PETSc.Options()
-    options['solver_param'] = key
+    options['solver_param'] = appctx.add(param)
 
     # Can we get the key string back?
     assert str(appctx.getKey('solver_param')) == options['solver_param']
@@ -21,13 +20,6 @@ def test_appctx():
     assert prm is param
 
     prm = appctx['solver_param']
-    assert prm is param
-
-    # Can we access param via the key?
-    prm = appctx.get(key, 20)
-    assert prm is param
-
-    prm = appctx[key]
     assert prm is param
 
     # Can we set a default value?

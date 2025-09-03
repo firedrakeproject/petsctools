@@ -26,12 +26,12 @@ class AppContext:
     i.e. a primitive type instance. This key is passed via PETSc.Options
     with the 'custompc_somedata' prefix.
 
-    The data can be retrieved in two ways.
-    1) Giving the AppContext the (fully prefixed) option for the key,
-       in which case the AppContext will internally fetch the key from
-       the PETSc.Options and return the data.
-    2) By manually fetching the AppContext key from the PETSc.Options,
-       then retrieving the data from the `AppContext` using that key.
+    NB: The user should never handle this key directly, it should only
+        ever be placed directly into the options dictionary.
+
+    The data can be retrieved by giving the AppContext the (fully
+    prefixed) option for the key, in which case the AppContext will
+    internally fetch the key from the PETSc.Options and return the data.
 
     .. code-block:: python3
 
@@ -46,18 +46,12 @@ class AppContext:
             options_prefix='solver')
 
         with opts.inserted_options():
-            # 1) Let AppContext fetch key.
-            #    Also shows providing default data.
             default = MyCustomData(10)
             data = appctx.get('solver_custompc_somedata', default)
-
-            # 2) Fetch key directly.
-            key = PETSc.Options()['solver_custompc_somedata']
-            data = appctx[key]
     """
 
     def __init__(self):
-        self._count = itertools.count()
+        self._count = itertools.count(start=0)
         self._data = {}
 
     def _keygen(self):
@@ -67,30 +61,6 @@ class AppContext:
         This should not called directly by the user.
         """
         return AppContextKey(next(self._count))
-
-    def _to_key(self, option):
-        """
-        Return the internal key for the PETSc option `option`.
-        If `option` is already an AppContextKey, `option` is returned.
-
-        This should not called directly by the user.
-        """
-        if isinstance(option, int):
-            return AppContextKey(option)
-        else:
-            return self.getKey(option)
-
-    @cached_property
-    def _missing_key(self):
-        """
-        Key instance representing a missing AppContext entry.
-
-        PETSc requires the default value for Options.getObj()
-        to be the correct type, so we need a dummy key.
-
-        This should not called directly by the user.
-        """
-        return self._keygen()
 
     def getKey(self, option):
         """
@@ -106,8 +76,7 @@ class AppContext:
         key : AppContextKey
             An internal key corresponding to `option`.
         """
-        key = self.options_object.getInt(option, self._missing_key)
-        return AppContextKey(key)
+        return AppContextKey(self.options_object.getInt(option))
 
     def add(self, val):
         """
@@ -151,7 +120,7 @@ class AppContext:
             If the AppContext does contain a value for `option`.
         """
         try:
-            return self._data[self._to_key(option)]
+            return self._data[self.getKey(option)]
         except KeyError:
             raise PetscToolsAppctxException(
                 f"AppContext does not have an entry for {option}")
@@ -173,10 +142,10 @@ class AppContext:
         val : Any
             The value for the key `option`, or `default`.
         """
-        key = self._to_key(option)
-        if key == self._missing_key:
+        try:
+            return self[option]
+        except PetscToolsAppctxException:
             return default
-        return self._data[key]
 
     @cached_property
     def options_object(self):
