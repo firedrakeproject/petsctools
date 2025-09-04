@@ -5,7 +5,6 @@ from petsctools.exceptions import PetscToolsAppctxException
 
 class AppContextKey(int):
     """A custom key type for AppContext."""
-    pass
 
 
 class AppContext:
