@@ -61,7 +61,7 @@ class AppContext:
         """
         return AppContextKey(next(self._count))
 
-    def getKey(self, option):
+    def _key_from_option(self, option):
         """
         Return the internal key for the PETSc option `option`.
 
@@ -119,7 +119,7 @@ class AppContext:
             If the AppContext does contain a value for `option`.
         """
         try:
-            return self._data[self.getKey(option)]
+            return self._data[self._key_from_option(option)]
         except KeyError:
             raise PetscToolsAppctxException(
                 f"AppContext does not have an entry for {option}")
