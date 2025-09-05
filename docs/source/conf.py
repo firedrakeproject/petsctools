@@ -18,8 +18,8 @@ master_doc = 'index'
 
 extensions = [
     'sphinx.ext.apidoc',
-    'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
+    # 'sphinx.ext.autodoc',
+    # 'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
 ]
 
@@ -32,8 +32,8 @@ exclude_patterns = []
 html_theme = 'alabaster'
 html_static_path = ['_static']
 
-# -- apidoc configuration -------------------------------------------------
+# -- sphinx.ext.apidoc configuration -------------------------------------------------
 
 apidoc_modules = [
-    {'path': '../petsctools', 'destination': 'source/'},
+    {'path': '../../petsctools', 'destination': 'api'},
 ]
