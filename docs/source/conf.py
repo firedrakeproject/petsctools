@@ -35,5 +35,5 @@ html_static_path = ['_static']
 # -- sphinx.ext.apidoc configuration -------------------------------------------------
 
 apidoc_modules = [
-    {'path': '../../petsctools', 'destination': 'api'},
+    {'path': '../../petsctools', 'destination': 'generated'},
 ]

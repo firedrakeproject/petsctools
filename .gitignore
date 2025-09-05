@@ -4,4 +4,4 @@ petsctools/config.ini
 *.egg-info
 
 docs/build
-docs/source/api
+docs/source/generated
