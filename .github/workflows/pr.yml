@@ -10,4 +10,6 @@ jobs:
     with:
       source_ref: ${{ github.ref }}
       target_branch: ${{ github.base_ref }}
+      # UNDO ME
+      deploy_website: true
     secrets: inherit
