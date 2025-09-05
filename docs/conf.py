@@ -35,5 +35,5 @@ html_static_path = ['_static']
 # -- apidoc configuration -------------------------------------------------
 
 apidoc_modules = [
-    {'path': '../../petsctools', 'destination': 'source/'},
+    {'path': '../petsctools', 'destination': 'source/'},
 ]
