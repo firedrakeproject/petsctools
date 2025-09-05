@@ -91,18 +91,6 @@ def flatten_parameters(parameters, sep="_"):
 class OptionsManager:
     """Class that helps with managing setting PETSc options.
 
-    Parameters
-    ----------
-    parameters: dict
-        The dictionary of parameters to use.
-    options_prefix: str or None
-        The prefix to look up items in the global options database
-        (may be ``None``, in which case only entries from ``parameters``
-        will be considered.
-        If no trailing underscore is provided, one is appended. Hence
-        ``foo_`` and ``foo`` are treated equivalently. As an exception,
-        if the prefix is the empty string, no underscore is appended.
-
     The recommended way to use the ``OptionsManager`` is by using the
     ``attach_options``, ``set_from_options``, and ``inserted_options``
     free functions. These functions ensure that each ``OptionsManager``
@@ -113,6 +101,7 @@ class OptionsManager:
     an association with a single PETSc object), see below.
 
     To use the ``OptionsManager``:
+
     1. Pass a PETSc object a parameters dictionary, and optionally
        an options prefix, to ``attach_options``. This will create an
        ``OptionsManager`` and set the prefix of the PETSc object,
@@ -131,27 +120,27 @@ class OptionsManager:
 
     .. code-block:: python3
 
-        ksp = PETSc.KSP().create(comm=comm)
-        ksp.setOperators(mat)
+       ksp = PETSc.KSP().create(comm=comm)
+       ksp.setOperators(mat)
 
-        attach_options(ksp, parameters=parameters,
-                       options_prefix=prefix)
+       attach_options(ksp, parameters=parameters,
+                      options_prefix=prefix)
 
-        # ...
+       # ...
 
-        set_from_options(ksp)
+       set_from_options(ksp)
 
-        # ...
+       # ...
 
-        with inserted_options(ksp):
-            ksp.solve(b, x)
+       with inserted_options(ksp):
+           ksp.solve(b, x)
 
     To access the OptionsManager for a PETSc object directly, use
     the ``get_options`` function:
 
     .. code-block:: python3
 
-        N = get_options(ksp).getInt(prefix+"N")
+       N = get_options(ksp).getInt(prefix+"N")
 
     Using ``OptionsManager`` as a mixin class:
 
@@ -167,14 +156,14 @@ class OptionsManager:
     So that the runtime monitors which look in the options database
     actually see options, you need to ensure that the options database
     is populated at the time of a ``SNESSolve`` or ``KSPSolve`` call.
-    Do that using the :meth:`inserted_options` context manager.
+    Do that using the `OptionsManager.inserted_options` context manager.
 
     If using as a mixin class, call the ``OptionsManager`` methods
     directly:
 
     .. code-block:: python3
 
-        self.set_from_options(self.snes)
+       self.set_from_options(self.snes)
 
        with self.inserted_options():
            self.snes.solve(...)
@@ -187,6 +176,18 @@ class OptionsManager:
 
     This object can also be used only to manage insertion and deletion
     into the PETSc options database, by using the context manager.
+
+    Parameters
+    ----------
+    parameters: dict
+        The dictionary of parameters to use.
+    options_prefix: str or None
+        The prefix to look up items in the global options database
+        (may be ``None``, in which case only entries from ``parameters``
+        will be considered.
+        If no trailing underscore is provided, one is appended. Hence
+        ``foo_`` and ``foo`` are treated equivalently. As an exception,
+        if the prefix is the empty string, no underscore is appended.
 
     See Also
     --------
