@@ -35,6 +35,7 @@ docs = ["numpydoc", "sphinx"]
 lint = ["ruff"]
 test = ["pytest"]
 ci = [
+  {include-group = "docs"},
   {include-group = "lint"},
   {include-group = "test"},
 ]

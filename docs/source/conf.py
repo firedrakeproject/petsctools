@@ -32,7 +32,7 @@ exclude_patterns = []
 html_theme = 'alabaster'
 html_static_path = ['_static']
 
-# -- sphinx.ext.apidoc configuration -------------------------------------------------
+# -- sphinx.ext.apidoc configuration ------------------------------------------
 
 apidoc_modules = [
     {'path': '../../petsctools', 'destination': 'generated'},
