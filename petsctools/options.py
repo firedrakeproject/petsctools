@@ -1,10 +1,15 @@
 import contextlib
 import functools
 import itertools
+import typing
 import warnings
 from petsctools.exceptions import (
     PetscToolsException, PetscToolsWarning,
     PetscToolsNotInitialisedException)
+
+
+if typing.TYPE_CHECKING:
+    import petsc4py
 
 
 _commandline_options = None
@@ -287,33 +292,32 @@ class OptionsManager:
         return PETSc.Options()
 
 
-def petscobj2str(obj):
+def petscobj2str(obj: petsc4py.PETSc.Object) -> str:
     """Return a string with a PETSc object type and prefix.
 
     Parameters
     ----------
-    obj : petsc4py.PETSc.Object
+    obj
         The object to stringify.
 
     Returns
     -------
-    name : str
         The stringified name of the object
     """
     return f"{type(obj).__name__} ({obj.getOptionsPrefix()})"
 
 
-def attach_options(obj, parameters=None,
-                   options_prefix=None):
+def attach_options(obj: petsc4py.PETSc.Object, parameters: dict | None = None,
+                   options_prefix: str | None = None) -> None:
     """Set up an OptionsManager and attach it to a PETSc Object.
 
     Parameters
     ----------
-    obj : petsc4py.PETSc.Object
+    obj
         The object to attach an OptionsManager to.
-    parameters : Optional[dict]
+    parameters
         The dictionary of parameters to use.
-    options_prefix: Optional[str]
+    options_prefix
         The options prefix to use for this object.
 
     See Also
@@ -331,17 +335,16 @@ def attach_options(obj, parameters=None,
     obj.setAttr("options", options)
 
 
-def has_options(obj):
+def has_options(obj: petsc4py.PETSc.Object) -> bool:
     """Return whether this PETSc object has an OptionsManager attached.
 
     Parameters
     ----------
-    obj : petsc4py.PETSc.Object
+    obj
         The object which may have an OptionsManager.
 
     Returns
     -------
-    object_has_options : bool
         Whether the object has an OptionsManager.
 
     See Also
@@ -354,17 +357,16 @@ def has_options(obj):
     )
 
 
-def get_options(obj):
+def get_options(obj: petsc4py.PETSc.Object) -> OptionsManager:
     """Return the OptionsManager attached to this PETSc object.
 
     Parameters
     ----------
-    obj : petsc4py.PETSc.Object
+    obj
         The object to get the OptionsManager from.
 
     Returns
     -------
-    options : OptionsManager
         The OptionsManager attached to the object.
 
     Raises
@@ -470,18 +472,17 @@ def set_from_options(obj, parameters=None,
     get_options(obj).set_from_options(obj)
 
 
-def is_set_from_options(obj):
+def is_set_from_options(obj: petsc4py.PETSc.Object) -> bool:
     """
     Return whether this PETSc object has been set by the OptionsManager.
 
     Parameters
     ----------
-    obj : petsc4py.PETSc.Object
+    obj
         The object which may have been set from options.
 
     Returns
     -------
-    object_is_set_from_options : bool
         Whether the object has previously been set from options.
 
     Raises
