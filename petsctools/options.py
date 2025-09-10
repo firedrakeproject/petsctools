@@ -2,6 +2,7 @@ import contextlib
 import functools
 import itertools
 import warnings
+from petsctools.appctx import push_appctx
 from petsctools.exceptions import (
     PetscToolsException, PetscToolsWarning,
     PetscToolsNotInitialisedException)
@@ -408,7 +409,8 @@ def set_default_parameter(obj, key, val):
 
 
 def set_from_options(obj, parameters=None,
-                     options_prefix=None):
+                     options_prefix=None,
+                     appctx=None):
     """Set up a PETSc object from the options in its OptionsManager.
 
     Calls ``obj.setOptionsPrefix`` and ``obj.setFromOptions`` whilst
@@ -467,7 +469,11 @@ def set_from_options(obj, parameters=None,
             f" called for {petscobj2str(obj)}",
             PetscToolsWarning)
 
-    get_options(obj).set_from_options(obj)
+    if appctx is None:
+        get_options(obj).set_from_options(obj)
+    else:
+        with push_appctx(appctx):
+            get_options(obj).set_from_options(obj)
 
 
 def is_set_from_options(obj):
