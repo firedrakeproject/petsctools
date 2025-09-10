@@ -1,15 +1,16 @@
+from __future__ import annotations
+
 import contextlib
 import functools
 import itertools
-import typing
 import warnings
+from typing import Any
+
+import petsc4py
+
 from petsctools.exceptions import (
     PetscToolsException, PetscToolsWarning,
     PetscToolsNotInitialisedException)
-
-
-if typing.TYPE_CHECKING:
-    import petsc4py
 
 
 _commandline_options = None
@@ -384,16 +385,16 @@ def get_options(obj: petsc4py.PETSc.Object) -> OptionsManager:
     return obj.getAttr("options")
 
 
-def set_default_parameter(obj, key, val):
+def set_default_parameter(obj: petsc4py.PETSc.Object, key: str, val: Any) -> None:
     """Set a default parameter value in the OptionsManager of a PETSc object.
 
     Parameters
     ----------
-    obj : petsc4py.PETSc.Object
+    obj
         The object to get the OptionsManager from.
-    key : str
+    key
         The options parameter name
-    val : Any
+    val
         The options parameter value
 
     Raises
@@ -409,8 +410,8 @@ def set_default_parameter(obj, key, val):
     get_options(obj).set_default_parameter(key, val)
 
 
-def set_from_options(obj, parameters=None,
-                     options_prefix=None):
+def set_from_options(obj: petsc4py.PETSc.Object, parameters: dict | None = None,
+                     options_prefix: str | None = None) -> None:
     """Set up a PETSc object from the options in its OptionsManager.
 
     Calls ``obj.setOptionsPrefix`` and ``obj.setFromOptions`` whilst
@@ -425,11 +426,11 @@ def set_from_options(obj, parameters=None,
 
     Parameters
     ----------
-    obj : petsc4py.PETSc.Object
+    obj
         The PETSc object to call setFromOptions on.
-    parameters : Optional[dict]
+    parameters
         The dictionary of parameters to use.
-    options_prefix: Optional[str]
+    options_prefix
         The options prefix to use for this object.
 
     Raises
@@ -478,7 +479,7 @@ def is_set_from_options(obj: petsc4py.PETSc.Object) -> bool:
 
     Parameters
     ----------
-    obj
+    obj :
         The object which may have been set from options.
 
     Returns

@@ -8,7 +8,6 @@ from .config import (  # noqa: F401
     get_external_packages,
 )
 from .exceptions import PetscToolsException  # noqa: F401
-from .options import flatten_parameters  # noqa: F401
 from .utils import PETSC4PY_INSTALLED
 
 # Now conditionally import the functions that depend on petsc4py. If petsc4py
@@ -22,6 +21,7 @@ if PETSC4PY_INSTALLED:
         init,
     )
     from .options import (  # noqa: F401
+        flatten_parameters,
         get_commandline_options,
         OptionsManager,
         petscobj2str,
@@ -41,6 +41,7 @@ else:
             "InvalidEnvironmentException",
             "InvalidPetscVersionException",
             "init",
+            "flatten_parameters",
             "get_commandline_options",
             "OptionsManager",
             "petscobj2str",
