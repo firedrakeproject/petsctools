@@ -1,6 +1,19 @@
 import itertools
 from functools import cached_property
+from contextlib import contextmanager
 from petsctools.exceptions import PetscToolsAppctxException
+
+_global_appctx_stack = []
+
+@contextmanager
+def push_appctx(appctx):
+    _global_appctx_stack.append(appctx)
+    yield
+    _global_appctx_stack.pop()
+
+
+def get_appctx():
+    return _global_appctx_stack[-1]
 
 
 class AppContextKey(int):

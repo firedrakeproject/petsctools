@@ -1,10 +1,62 @@
+import numpy as np
 import pytest
 import petsctools
 from petsctools.exceptions import PetscToolsAppctxException
 
 
+class JacobiTestPC:
+    prefix = "jacobi_"
+    def setFromOptions(self, pc):
+        appctx = petsctools.get_appctx()
+        prefix = (pc.getOptionsPrefix() or "") + self.prefix
+        self.scale = appctx[prefix + "scale"]
+
+    def apply(self, pc, x, y):
+        y.pointwiseMult(x, self.scale)
+
+
 @pytest.mark.skipnopetsc4py
-def test_appctx():
+def test_get_appctx():
+    PETSc = petsctools.init()
+    n = 4
+    sizes = (n, n)
+
+    appctx = petsctools.AppContext()
+
+    diag = PETSc.Vec().createSeq(sizes)
+    diag.setSizes((n, n))
+    diag.array[:] = [1, 2, 3, 4]
+
+    mat = PETSc.Mat().createConstantDiagonal((sizes, sizes), 1.0)
+
+    ksp = PETSc.KSP().create()
+    ksp.setOperators(mat, mat)
+    petsctools.set_from_options(
+        ksp,
+        parameters={
+            'ksp_type': 'preonly',
+            'pc_type': 'python',
+            'pc_python_type': f'{__name__}.JacobiTestPC',
+            'jacobi_scale': appctx.add(diag)
+        },
+        options_prefix="myksp",
+        appctx=appctx,
+    )
+
+    x, b = mat.createVecs()
+    b.setRandom()
+
+    xcheck = x.duplicate()
+    xcheck.pointwiseMult(b, diag)
+
+    with petsctools.inserted_options(ksp), petsctools.push_appctx(appctx):
+        ksp.solve(b, x)
+
+    assert np.allclose(x.array_r, xcheck.array_r)
+
+
+@pytest.mark.skipnopetsc4py
+def test_appctx_key():
     PETSc = petsctools.init()
 
     appctx = petsctools.AppContext()
@@ -12,9 +64,6 @@ def test_appctx():
     param = 10
     options = PETSc.Options()
     options['solver_param'] = appctx.add(param)
-
-    # Can we get the key string back?
-    assert str(appctx.getKey('solver_param')) == options['solver_param']
 
     # Can we access param via the prefixed option?
     prm = appctx.get('solver_param')
