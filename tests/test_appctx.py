@@ -1,4 +1,3 @@
-import numpy as np
 import pytest
 import petsctools
 from petsctools.exceptions import PetscToolsAppctxException
@@ -17,6 +16,7 @@ class JacobiTestPC:
 
 @pytest.mark.skipnopetsc4py
 def test_get_appctx():
+    from numpy import allclose
     PETSc = petsctools.init()
     n = 4
     sizes = (n, n)
@@ -52,7 +52,7 @@ def test_get_appctx():
     with petsctools.inserted_options(ksp), petsctools.push_appctx(appctx):
         ksp.solve(b, x)
 
-    assert np.allclose(x.array_r, xcheck.array_r)
+    assert allclose(x.array_r, xcheck.array_r)
 
 
 @pytest.mark.skipnopetsc4py
