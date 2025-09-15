@@ -9,8 +9,10 @@ from typing import Any
 import petsc4py
 
 from petsctools.exceptions import (
-    PetscToolsException, PetscToolsWarning,
-    PetscToolsNotInitialisedException)
+    PetscToolsException,
+    PetscToolsWarning,
+    PetscToolsNotInitialisedException,
+)
 
 
 _commandline_options = None
@@ -185,9 +187,9 @@ class OptionsManager:
 
     Parameters
     ----------
-    parameters: dict
+    parameters
         The dictionary of parameters to use.
-    options_prefix: str or None
+    options_prefix
         The prefix to look up items in the global options database
         (may be ``None``, in which case only entries from ``parameters``
         will be considered.
@@ -207,7 +209,7 @@ class OptionsManager:
 
     count = itertools.count()
 
-    def __init__(self, parameters, options_prefix):
+    def __init__(self, parameters: dict, options_prefix: str | None):
         super().__init__()
         if parameters is None:
             parameters = {}
@@ -236,17 +238,22 @@ class OptionsManager:
             # since that does not DTRT for flag options.
             for k, v in self.options_object.getAll().items():
                 if k.startswith(self.options_prefix):
-                    self.parameters[k[len(self.options_prefix):]] = v
+                    self.parameters[k[len(self.options_prefix) :]] = v
         self._setfromoptions = False
 
-    def set_default_parameter(self, key, val):
+    def set_default_parameter(self, key: str, val: Any) -> None:
         """Set a default parameter value.
 
-        :arg key: The parameter name
-        :arg val: The parameter value.
+        Parameters
+        ----------
+        key :
+            The parameter name.
+        val :
+            The parameter value.
 
         Ensures that the right thing happens cleaning up the options
         database.
+
         """
         k = self.options_prefix + key
         if k not in self.options_object and key not in self.parameters:
@@ -272,8 +279,8 @@ class OptionsManager:
                 self._setfromoptions = True
         else:
             warnings.warn(
-                "setFromOptions has already been called",
-                PetscToolsWarning)
+                "setFromOptions has already been called", PetscToolsWarning
+            )
 
     @contextlib.contextmanager
     def inserted_options(self):
@@ -290,6 +297,7 @@ class OptionsManager:
     @functools.cached_property
     def options_object(self):
         from petsc4py import PETSc
+
         return PETSc.Options()
 
 
@@ -308,8 +316,11 @@ def petscobj2str(obj: petsc4py.PETSc.Object) -> str:
     return f"{type(obj).__name__} ({obj.getOptionsPrefix()})"
 
 
-def attach_options(obj: petsc4py.PETSc.Object, parameters: dict | None = None,
-                   options_prefix: str | None = None) -> None:
+def attach_options(
+    obj: petsc4py.PETSc.Object,
+    parameters: dict | None = None,
+    options_prefix: str | None = None,
+) -> None:
     """Set up an OptionsManager and attach it to a PETSc Object.
 
     Parameters
@@ -328,11 +339,12 @@ def attach_options(obj: petsc4py.PETSc.Object, parameters: dict | None = None,
     if has_options(obj):
         raise PetscToolsException(
             "An OptionsManager has already been"
-            f"  attached to {petscobj2str(obj)}")
+            f"  attached to {petscobj2str(obj)}"
+        )
 
     options = OptionsManager(
-        parameters=parameters,
-        options_prefix=options_prefix)
+        parameters=parameters, options_prefix=options_prefix
+    )
     obj.setAttr("options", options)
 
 
@@ -352,9 +364,8 @@ def has_options(obj: petsc4py.PETSc.Object) -> bool:
     --------
     OptionsManager
     """
-    return (
-        "options" in obj.getDict()
-        and isinstance(obj.getAttr("options"), OptionsManager)
+    return "options" in obj.getDict() and isinstance(
+        obj.getAttr("options"), OptionsManager
     )
 
 
@@ -381,11 +392,14 @@ def get_options(obj: petsc4py.PETSc.Object) -> OptionsManager:
     """
     if not has_options(obj):
         raise PetscToolsException(
-            "No OptionsManager attached to {petscobj2str(obj)}")
+            "No OptionsManager attached to {petscobj2str(obj)}"
+        )
     return obj.getAttr("options")
 
 
-def set_default_parameter(obj: petsc4py.PETSc.Object, key: str, val: Any) -> None:
+def set_default_parameter(
+    obj: petsc4py.PETSc.Object, key: str, val: Any
+) -> None:
     """Set a default parameter value in the OptionsManager of a PETSc object.
 
     Parameters
@@ -410,8 +424,11 @@ def set_default_parameter(obj: petsc4py.PETSc.Object, key: str, val: Any) -> Non
     get_options(obj).set_default_parameter(key, val)
 
 
-def set_from_options(obj: petsc4py.PETSc.Object, parameters: dict | None = None,
-                     options_prefix: str | None = None) -> None:
+def set_from_options(
+    obj: petsc4py.PETSc.Object,
+    parameters: dict | None = None,
+    options_prefix: str | None = None,
+) -> None:
     """Set up a PETSc object from the options in its OptionsManager.
 
     Calls ``obj.setOptionsPrefix`` and ``obj.setFromOptions`` whilst
@@ -454,21 +471,24 @@ def set_from_options(obj: petsc4py.PETSc.Object, parameters: dict | None = None,
             raise PetscToolsException(
                 f"{petscobj2str(obj)} already has an OptionsManager"
                 " but parameters and/or options_prefix were provided"
-                " to set_from_options")
+                " to set_from_options"
+            )
     else:
         if parameters is None and options_prefix is None:
             raise PetscToolsException(
                 f"{petscobj2str(obj)} does not have an OptionsManager"
                 " but neither parameters nor options_prefix were"
-                " provided to set_from_options")
-        attach_options(obj, parameters=parameters,
-                       options_prefix=options_prefix)
+                " provided to set_from_options"
+            )
+        attach_options(
+            obj, parameters=parameters, options_prefix=options_prefix
+        )
 
     if is_set_from_options(obj):
         warnings.warn(
-            "setFromOptions has already been"
-            f" called for {petscobj2str(obj)}",
-            PetscToolsWarning)
+            f"setFromOptions has already been called for {petscobj2str(obj)}",
+            PetscToolsWarning,
+        )
 
     get_options(obj).set_from_options(obj)
 

@@ -6,33 +6,32 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'petsctools'
-copyright = '2025, Imperial College London and others'
-author = 'Imperial College London and others'
+project = "petsctools"
+copyright = "2025, Imperial College London and others"
+author = "Imperial College London and others"
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    'sphinx.ext.apidoc',
-    'sphinx.ext.napoleon',
-    'sphinx_autodoc_typehints',
+    "sphinx.ext.apidoc",
+    "sphinx.ext.napoleon",
 ]
 
-templates_path = ['_templates']
+templates_path = ["_templates"]
 exclude_patterns = []
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'alabaster'
-html_static_path = ['_static']
+html_theme = "alabaster"
+html_static_path = ["_static"]
 
 # -- sphinx.ext.apidoc configuration ------------------------------------------
 
 apidoc_modules = [
-    {'path': '../../petsctools', 'destination': 'generated'},
+    {"path": "../../petsctools", "destination": "generated"},
 ]
