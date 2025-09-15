@@ -1,6 +1,6 @@
 # petsctools
 
-https://firedrakeproject/petsctools
+https://firedrakeproject.org/petsctools
 
 ## Copyright
 
