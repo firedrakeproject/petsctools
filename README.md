@@ -1,5 +1,7 @@
 # petsctools
 
+https://firedrakeproject/petsctools
+
 ## Copyright
 
 Copyright (C) 2025 Imperial College London and others
