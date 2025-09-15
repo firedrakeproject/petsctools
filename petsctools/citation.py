@@ -59,7 +59,8 @@ def cite(cite_key: str) -> None:
         PETSc.Sys.registerCitation(citation)
     else:
         raise KeyError(
-            f"Did not find a citation for '{cite_key}', please add it to the citations database"
+            f"Did not find a citation for '{cite_key}', please add it to the "
+            "citations database"
         )
 
 
