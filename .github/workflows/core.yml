@@ -1,13 +1,44 @@
-name: CI
-
 on:
-  push:
-    branches:
-      - main
-  pull_request:
+  workflow_call:
+    inputs:
+      source_ref:
+        description: The input Git ref to checkout
+        type: string
+        required: true
+      target_branch:
+        description: The target branch
+        type: string
+        required: true
+      run_tests:
+        description: Whether to run the test suite
+        type: boolean
+        default: true
+      deploy_website:
+        description: Whether to deploy the website
+        type: boolean
+        default: false
+
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: The input Git ref to checkout
+        type: string
+        required: true
+      target_branch:
+        description: The target branch
+        type: string
+        required: true
+      run_tests:
+        description: Whether to run the test suite
+        type: boolean
+        default: true
+      deploy_website:
+        description: Whether to deploy the website
+        type: boolean
+        default: false
 
 concurrency:
-  # Cancel running job if new commits are pushed
+  # Cancel running jobs if new commits are pushed
   group: >
     ${{ github.workflow }}-
     ${{ github.event.pull_request.number || github.ref }}
@@ -20,6 +51,8 @@ jobs:
     env:
       PETSC_DIR: ${{ github.workspace }}/petsc
       PETSC_ARCH: arch-default
+    outputs:
+      docs_conclusion: ${{ steps.report_docs.outputs.conclusion }}
     steps:
       - name: Install system dependencies
         run: |
@@ -82,3 +115,42 @@ jobs:
         run: |
           . venv-petsctools/bin/activate
           pytest petsctools-repo
+
+      - name: Build documentation
+        id: build_docs
+        if: success() || steps.install.conclusion == 'success'
+        run: |
+          . venv-petsctools/bin/activate
+          make -C petsctools-repo/docs html
+
+      - name: Upload documentation
+        id: upload_docs
+        uses: actions/upload-pages-artifact@v3
+        if: success() || steps.build_docs.conclusion == 'success'
+        with:
+          name: github-pages
+          path: petsctools-repo/docs/build/html
+          retention-days: 1
+
+      - name: Report docs build status
+        id: report_docs
+        if: success() || steps.upload_docs.conclusion == 'success'
+        run: echo "conclusion=success" >> "$GITHUB_OUTPUT"
+
+  deploy_website:
+    name: Deploy website (optional)
+    needs: test
+    if: |
+      always() &&
+      inputs.deploy_website &&
+      needs.test.outputs.docs_conclusion == 'success'
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
+

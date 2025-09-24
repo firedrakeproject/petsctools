@@ -1,10 +1,18 @@
+from __future__ import annotations
+
 import contextlib
 import functools
 import itertools
 import warnings
+from typing import Any
+
+import petsc4py
+
 from petsctools.exceptions import (
-    PetscToolsException, PetscToolsWarning,
-    PetscToolsNotInitialisedException)
+    PetscToolsException,
+    PetscToolsWarning,
+    PetscToolsNotInitialisedException,
+)
 
 
 _commandline_options = None
@@ -91,19 +99,6 @@ def flatten_parameters(parameters, sep="_"):
 class OptionsManager:
     """Class that helps with managing setting PETSc options.
 
-    Parameters
-    ----------
-
-    parameters: dict
-        The dictionary of parameters to use.
-    options_prefix: str or None
-        The prefix to look up items in the global options database
-        (may be ``None``, in which case only entries from ``parameters``
-        will be considered.
-        If no trailing underscore is provided, one is appended. Hence
-        ``foo_`` and ``foo`` are treated equivalently. As an exception,
-        if the prefix is the empty string, no underscore is appended.
-
     The recommended way to use the ``OptionsManager`` is by using the
     ``attach_options``, ``set_from_options``, and ``inserted_options``
     free functions. These functions ensure that each ``OptionsManager``
@@ -114,6 +109,7 @@ class OptionsManager:
     an association with a single PETSc object), see below.
 
     To use the ``OptionsManager``:
+
     1. Pass a PETSc object a parameters dictionary, and optionally
        an options prefix, to ``attach_options``. This will create an
        ``OptionsManager`` and set the prefix of the PETSc object,
@@ -132,27 +128,27 @@ class OptionsManager:
 
     .. code-block:: python3
 
-        ksp = PETSc.KSP().create(comm=comm)
-        ksp.setOperators(mat)
+       ksp = PETSc.KSP().create(comm=comm)
+       ksp.setOperators(mat)
 
-        attach_options(ksp, parameters=parameters,
-                       options_prefix=prefix)
+       attach_options(ksp, parameters=parameters,
+                      options_prefix=prefix)
 
-        # ...
+       # ...
 
-        set_from_options(ksp)
+       set_from_options(ksp)
 
-        # ...
+       # ...
 
-        with inserted_options(ksp):
-            ksp.solve(b, x)
+       with inserted_options(ksp):
+           ksp.solve(b, x)
 
     To access the OptionsManager for a PETSc object directly, use
     the ``get_options`` function:
 
     .. code-block:: python3
 
-        N = get_options(ksp).getInt(prefix+"N")
+       N = get_options(ksp).getInt(prefix+"N")
 
     Using ``OptionsManager`` as a mixin class:
 
@@ -168,14 +164,14 @@ class OptionsManager:
     So that the runtime monitors which look in the options database
     actually see options, you need to ensure that the options database
     is populated at the time of a ``SNESSolve`` or ``KSPSolve`` call.
-    Do that using the :meth:`inserted_options` context manager.
+    Do that using the `OptionsManager.inserted_options` context manager.
 
     If using as a mixin class, call the ``OptionsManager`` methods
     directly:
 
     .. code-block:: python3
 
-        self.set_from_options(self.snes)
+       self.set_from_options(self.snes)
 
        with self.inserted_options():
            self.snes.solve(...)
@@ -189,6 +185,18 @@ class OptionsManager:
     This object can also be used only to manage insertion and deletion
     into the PETSc options database, by using the context manager.
 
+    Parameters
+    ----------
+    parameters
+        The dictionary of parameters to use.
+    options_prefix
+        The prefix to look up items in the global options database
+        (may be ``None``, in which case only entries from ``parameters``
+        will be considered.
+        If no trailing underscore is provided, one is appended. Hence
+        ``foo_`` and ``foo`` are treated equivalently. As an exception,
+        if the prefix is the empty string, no underscore is appended.
+
     See Also
     --------
     attach_options
@@ -201,7 +209,7 @@ class OptionsManager:
 
     count = itertools.count()
 
-    def __init__(self, parameters, options_prefix):
+    def __init__(self, parameters: dict, options_prefix: str | None):
         super().__init__()
         if parameters is None:
             parameters = {}
@@ -230,17 +238,22 @@ class OptionsManager:
             # since that does not DTRT for flag options.
             for k, v in self.options_object.getAll().items():
                 if k.startswith(self.options_prefix):
-                    self.parameters[k[len(self.options_prefix):]] = v
+                    self.parameters[k[len(self.options_prefix) :]] = v
         self._setfromoptions = False
 
-    def set_default_parameter(self, key, val):
+    def set_default_parameter(self, key: str, val: Any) -> None:
         """Set a default parameter value.
 
-        :arg key: The parameter name
-        :arg val: The parameter value.
+        Parameters
+        ----------
+        key :
+            The parameter name.
+        val :
+            The parameter value.
 
         Ensures that the right thing happens cleaning up the options
         database.
+
         """
         k = self.options_prefix + key
         if k not in self.options_object and key not in self.parameters:
@@ -266,8 +279,8 @@ class OptionsManager:
                 self._setfromoptions = True
         else:
             warnings.warn(
-                "setFromOptions has already been called",
-                PetscToolsWarning)
+                "setFromOptions has already been called", PetscToolsWarning
+            )
 
     @contextlib.contextmanager
     def inserted_options(self):
@@ -284,36 +297,39 @@ class OptionsManager:
     @functools.cached_property
     def options_object(self):
         from petsc4py import PETSc
+
         return PETSc.Options()
 
 
-def petscobj2str(obj):
+def petscobj2str(obj: petsc4py.PETSc.Object) -> str:
     """Return a string with a PETSc object type and prefix.
 
     Parameters
     ----------
-    obj : petsc4py.PETSc.Object
+    obj
         The object to stringify.
 
     Returns
     -------
-    name : str
         The stringified name of the object
     """
     return f"{type(obj).__name__} ({obj.getOptionsPrefix()})"
 
 
-def attach_options(obj, parameters=None,
-                   options_prefix=None):
+def attach_options(
+    obj: petsc4py.PETSc.Object,
+    parameters: dict | None = None,
+    options_prefix: str | None = None,
+) -> None:
     """Set up an OptionsManager and attach it to a PETSc Object.
 
     Parameters
     ----------
-    obj : petsc4py.PETSc.Object
+    obj
         The object to attach an OptionsManager to.
-    parameters : Optional[dict]
+    parameters
         The dictionary of parameters to use.
-    options_prefix: Optional[str]
+    options_prefix
         The options prefix to use for this object.
 
     See Also
@@ -323,48 +339,46 @@ def attach_options(obj, parameters=None,
     if has_options(obj):
         raise PetscToolsException(
             "An OptionsManager has already been"
-            f"  attached to {petscobj2str(obj)}")
+            f"  attached to {petscobj2str(obj)}"
+        )
 
     options = OptionsManager(
-        parameters=parameters,
-        options_prefix=options_prefix)
+        parameters=parameters, options_prefix=options_prefix
+    )
     obj.setAttr("options", options)
 
 
-def has_options(obj):
+def has_options(obj: petsc4py.PETSc.Object) -> bool:
     """Return whether this PETSc object has an OptionsManager attached.
 
     Parameters
     ----------
-    obj : petsc4py.PETSc.Object
+    obj
         The object which may have an OptionsManager.
 
     Returns
     -------
-    object_has_options : bool
         Whether the object has an OptionsManager.
 
     See Also
     --------
     OptionsManager
     """
-    return (
-        "options" in obj.getDict()
-        and isinstance(obj.getAttr("options"), OptionsManager)
+    return "options" in obj.getDict() and isinstance(
+        obj.getAttr("options"), OptionsManager
     )
 
 
-def get_options(obj):
+def get_options(obj: petsc4py.PETSc.Object) -> OptionsManager:
     """Return the OptionsManager attached to this PETSc object.
 
     Parameters
     ----------
-    obj : petsc4py.PETSc.Object
+    obj
         The object to get the OptionsManager from.
 
     Returns
     -------
-    options : OptionsManager
         The OptionsManager attached to the object.
 
     Raises
@@ -378,20 +392,23 @@ def get_options(obj):
     """
     if not has_options(obj):
         raise PetscToolsException(
-            "No OptionsManager attached to {petscobj2str(obj)}")
+            "No OptionsManager attached to {petscobj2str(obj)}"
+        )
     return obj.getAttr("options")
 
 
-def set_default_parameter(obj, key, val):
+def set_default_parameter(
+    obj: petsc4py.PETSc.Object, key: str, val: Any
+) -> None:
     """Set a default parameter value in the OptionsManager of a PETSc object.
 
     Parameters
     ----------
-    obj : petsc4py.PETSc.Object
+    obj
         The object to get the OptionsManager from.
-    key : str
+    key
         The options parameter name
-    val : Any
+    val
         The options parameter value
 
     Raises
@@ -407,8 +424,11 @@ def set_default_parameter(obj, key, val):
     get_options(obj).set_default_parameter(key, val)
 
 
-def set_from_options(obj, parameters=None,
-                     options_prefix=None):
+def set_from_options(
+    obj: petsc4py.PETSc.Object,
+    parameters: dict | None = None,
+    options_prefix: str | None = None,
+) -> None:
     """Set up a PETSc object from the options in its OptionsManager.
 
     Calls ``obj.setOptionsPrefix`` and ``obj.setFromOptions`` whilst
@@ -423,11 +443,11 @@ def set_from_options(obj, parameters=None,
 
     Parameters
     ----------
-    obj : petsc4py.PETSc.Object
+    obj
         The PETSc object to call setFromOptions on.
-    parameters : Optional[dict]
+    parameters
         The dictionary of parameters to use.
-    options_prefix: Optional[str]
+    options_prefix
         The options prefix to use for this object.
 
     Raises
@@ -451,37 +471,39 @@ def set_from_options(obj, parameters=None,
             raise PetscToolsException(
                 f"{petscobj2str(obj)} already has an OptionsManager"
                 " but parameters and/or options_prefix were provided"
-                " to set_from_options")
+                " to set_from_options"
+            )
     else:
         if parameters is None and options_prefix is None:
             raise PetscToolsException(
                 f"{petscobj2str(obj)} does not have an OptionsManager"
                 " but neither parameters nor options_prefix were"
-                " provided to set_from_options")
-        attach_options(obj, parameters=parameters,
-                       options_prefix=options_prefix)
+                " provided to set_from_options"
+            )
+        attach_options(
+            obj, parameters=parameters, options_prefix=options_prefix
+        )
 
     if is_set_from_options(obj):
         warnings.warn(
-            "setFromOptions has already been"
-            f" called for {petscobj2str(obj)}",
-            PetscToolsWarning)
+            f"setFromOptions has already been called for {petscobj2str(obj)}",
+            PetscToolsWarning,
+        )
 
     get_options(obj).set_from_options(obj)
 
 
-def is_set_from_options(obj):
+def is_set_from_options(obj: petsc4py.PETSc.Object) -> bool:
     """
     Return whether this PETSc object has been set by the OptionsManager.
 
     Parameters
     ----------
-    obj : petsc4py.PETSc.Object
+    obj :
         The object which may have been set from options.
 
     Returns
     -------
-    object_is_set_from_options : bool
         Whether the object has previously been set from options.
 
     Raises
