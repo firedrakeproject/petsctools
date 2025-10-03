@@ -17,9 +17,6 @@ Example usage::
 
 """
 
-from petsc4py import PETSc
-
-
 _citations_database = {}
 
 
@@ -54,6 +51,8 @@ def cite(cite_key: str) -> None:
         If no such citation is found in the database.
 
     """
+    from petsc4py import PETSc
+
     if cite_key in _citations_database:
         citation = _citations_database[cite_key]
         PETSc.Sys.registerCitation(citation)
@@ -66,5 +65,7 @@ def cite(cite_key: str) -> None:
 
 def print_citations_at_exit() -> None:
     """Print citations at the end of the program."""
+    from petsc4py import PETSc
+
     # We devolve to PETSc for actually printing citations.
     PETSc.Options()["citations"] = None

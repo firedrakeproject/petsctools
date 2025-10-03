@@ -110,6 +110,20 @@ jobs:
           . venv-petsctools/bin/activate
           pip install --verbose $PETSC_DIR/src/binding/petsc4py
 
+      # Make sure that running 'import petsctools' does not initialise PETSc
+      # (e.g. by running 'from petsc4py import PETSc'). Otherwise 'petsctools.init'
+      # does nothing. We check this by passing a PETSc option on the command line
+      # and making sure that it is processed.
+      - name: Test lazy PETSc initialisation
+        if: success() || steps.install-petsc4py.conclusion == 'success'
+        run: |
+          . venv-petsctools/bin/activate
+          if [ -z "$( python -c 'import petsctools; petsctools.init()' -log_view | grep 'PETSc Performance Summary' )" ]; then
+            exit 1
+          else
+            exit 0
+          fi
+
       - name: Run tests with petsc4py
         if: success() || steps.install-petsc4py.conclusion == 'success'
         run: |
