@@ -2,7 +2,7 @@
 name = "petsctools"
 # <year>.<patch>
 # TODO RELEASE
-version = "2025.2.dev0"
+version = "2025.3.dev0"
 description = "Pythonic extensions for petsc4py and slepc4py"
 readme = "README.md"
 license = "LGPL-3.0-or-later"
