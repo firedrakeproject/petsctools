@@ -4,7 +4,7 @@ import contextlib
 import functools
 import itertools
 import warnings
-from typing import Any
+from typing import Any, Optional
 
 import petsc4py
 
@@ -90,7 +90,7 @@ def flatten_parameters(parameters, sep="_"):
         if option in new:
             warnings.warn(
                 f"Ignoring duplicate option: {option} (existing value "
-                f"{new[option]}, new value {value})",
+                f"{new[option]}, new value {value})", PetscToolsWarning
             )
         new[option] = value
     return new
@@ -240,6 +240,8 @@ class OptionsManager:
                 if k.startswith(self.options_prefix):
                     self.parameters[k[len(self.options_prefix) :]] = v
         self._setfromoptions = False
+        # Keep track of options used between invocations of inserted_options().
+        self._used_options = set()
 
     def set_default_parameter(self, key: str, val: Any) -> None:
         """Set a default parameter value.
@@ -292,6 +294,8 @@ class OptionsManager:
             yield
         finally:
             for k in self.to_delete:
+                if self.options_object.used(self.options_prefix + k):
+                    self._used_options.add(k)
                 del self.options_object[self.options_prefix + k]
 
     @functools.cached_property
@@ -299,6 +303,25 @@ class OptionsManager:
         from petsc4py import PETSc
 
         return PETSc.Options()
+
+    def warn_unused_options(self, options_to_ignore: Optional[set] = None):
+        """Log a warning for any unused options.
+
+        Parameters
+        ----------
+        options_to_ignore :
+            List of options for which a warning will not be raised even
+            if they were not used. Useful for ignoring any default options.
+        """
+        options_to_ignore = options_to_ignore or set()
+
+        unused_options = self.to_delete - (self._used_options
+                                           | options_to_ignore)
+        for option in unused_options:
+            warnings.warn(
+                f"PETSc object {self.options_prefix} has unused option: {option}",
+                PetscToolsWarning
+            )
 
 
 def petscobj2str(obj: petsc4py.PETSc.Object) -> str:
@@ -530,3 +553,23 @@ def inserted_options(obj):
     """
     with get_options(obj).inserted_options():
         yield
+
+
+def warn_unused_options(obj, options_to_ignore: Optional[set])
+    """Log a warning for any unused options.
+
+    Parameters
+    ----------
+    obj :
+        The object with an OptionsManager attached.
+
+    options_to_ignore :
+        List of options for which a warning will not be raised even
+        if they were not used. Useful for ignoring any default options.
+
+    See Also
+    --------
+    OptionsManager
+    OptionsManager.warn_unused_options
+    """
+    get_options(obj).warn_unused_options(options_to_ignore=options_to_ignore)
