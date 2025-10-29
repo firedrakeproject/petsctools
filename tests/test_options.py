@@ -1,11 +1,12 @@
 import logging
 import pytest
 import petsctools
-PETSc = petsctools.init()
 
 
+@pytest.mark.skipnopetsc4py
 def test_unused_options():
     """Check that unused solver options result in a warning in the log."""
+    PETSc = petsctools.init()
 
     parameters = {
         "used": 1,
