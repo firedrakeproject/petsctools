@@ -555,7 +555,7 @@ def inserted_options(obj):
         yield
 
 
-def warn_unused_options(obj, options_to_ignore: Optional[set])
+def warn_unused_options(obj, options_to_ignore: Optional[set]):
     """Log a warning for any unused options.
 
     Parameters
