@@ -35,7 +35,9 @@ def clear_options():
 @pytest.mark.parametrize("respect_petsc_options_left", (True, False),
                          ids=lambda b: f"respect={b}")
 @pytest.mark.parametrize("options_left", (-1, 0, 1),
-                         ids=("no_options_left", "options_left=0", "options_left=1"))
+                         ids=("no_options_left",
+                              "options_left=0",
+                              "options_left=1"))
 def test_unused_options(respect_petsc_options_left, options_left):
     """Check that unused solver options result in a warning in the log."""
     # PETSc already initialised by module scope fixture

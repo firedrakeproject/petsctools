@@ -238,7 +238,7 @@ class OptionsManager:
             # since that does not DTRT for flag options.
             for k, v in self.options_object.getAll().items():
                 if k.startswith(self.options_prefix):
-                    self.parameters[k[len(self.options_prefix) :]] = v
+                    self.parameters[k[len(self.options_prefix):]] = v
         self._setfromoptions = False
         # Keep track of options used between invocations of inserted_options().
         self._used_options = set()
@@ -316,12 +316,12 @@ class OptionsManager:
             if they were not used. Useful for ignoring any default options.
 
         petsc_obj :
-            The PETSc object (e.g. SNES, KSP) associated with this OptionsManager.
-            Used to specify the warning message.
+            The PETSc object (e.g. SNES, KSP) associated with this
+            OptionsManager. Used to specify the warning message.
 
         respect_petsc_options_left :
-            If True then warnings will only be raised if "-options_left" is in the
-            global PETSc.Options() dictionary and the value is >0.
+            If True then warnings will only be raised if "-options_left" is
+            in the global PETSc.Options() dictionary and the value is >0.
         """
         if respect_petsc_options_left:
             with self.inserted_options():
