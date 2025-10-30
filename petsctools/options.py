@@ -324,8 +324,9 @@ class OptionsManager:
             global PETSc.Options() dictionary and the value is >0.
         """
         if respect_petsc_options_left:
-            if self.options_object.getInt("options_left", 0) == 0:
-                return
+            with self.inserted_options():
+                if self.options_object.getInt("options_left", 0) == 0:
+                    return
 
         options_to_ignore = set(options_to_ignore) or set()
 
