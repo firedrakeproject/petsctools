@@ -33,6 +33,7 @@ if PETSC4PY_INSTALLED:
         is_set_from_options,
         inserted_options,
         set_default_parameter,
+        warn_unused_options,
     )
 else:
 
@@ -56,6 +57,7 @@ else:
             "is_set_from_options",
             "inserted_options",
             "set_default_parameter",
+            "warn_unused_options",
         }
         if name in petsc4py_attrs:
             raise ImportError(

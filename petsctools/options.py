@@ -4,7 +4,7 @@ import contextlib
 import functools
 import itertools
 import warnings
-from typing import Any, Optional
+from typing import Any, Iterable
 
 import petsc4py
 
@@ -304,22 +304,33 @@ class OptionsManager:
 
         return PETSc.Options()
 
-    def warn_unused_options(self, options_to_ignore: Optional[set] = None):
+    def warn_unused_options(self, options_to_ignore: Iterable | None = None,
+                            obj: Any | None = None):
         """Log a warning for any unused options.
 
         Parameters
         ----------
         options_to_ignore :
-            List of options for which a warning will not be raised even
+            Set of options for which a warning will not be raised even
             if they were not used. Useful for ignoring any default options.
+
+        petsc_obj :
+            The PETSc object (e.g. SNES, KSP) associated with this OptionsManager.
+            Used to
         """
-        options_to_ignore = options_to_ignore or set()
+        options_to_ignore = set(options_to_ignore) or set()
 
         unused_options = self.to_delete - (self._used_options
                                            | options_to_ignore)
+
+        if obj is None:
+            object_name = f"object {self.options_prefix}"
+        else:
+            object_name = petscobj2str(obj)
+
         for option in unused_options:
             warnings.warn(
-                f"PETSc object {self.options_prefix} has unused option: {option}",
+                f"PETSc {object_name} has unused option: {option}",
                 PetscToolsWarning
             )
 
@@ -555,7 +566,7 @@ def inserted_options(obj):
         yield
 
 
-def warn_unused_options(obj, options_to_ignore: Optional[set]):
+def warn_unused_options(obj, options_to_ignore: Iterable | None = None):
     """Log a warning for any unused options.
 
     Parameters
@@ -572,4 +583,5 @@ def warn_unused_options(obj, options_to_ignore: Optional[set]):
     OptionsManager
     OptionsManager.warn_unused_options
     """
-    get_options(obj).warn_unused_options(options_to_ignore=options_to_ignore)
+    get_options(obj).warn_unused_options(
+        options_to_ignore=options_to_ignore, obj=obj)

@@ -1,4 +1,3 @@
-import logging
 import pytest
 import petsctools
 
@@ -23,9 +22,11 @@ def test_unused_options():
 
     assert len(records) == 1
     message = str(records[0].message)
+
     # Does the warning include the options prefix?
     assert "optobj" in message
-    # Do we only raise a warning for the unused option?
+
+    # Do we only raise a warning for the unused option that isn't ignored?
     # Need a space before the option because ("used" in "not_used") == True
     assert " not_used" in message
     assert " used" not in message
