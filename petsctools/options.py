@@ -599,4 +599,5 @@ def warn_unused_options(obj, options_to_ignore: Iterable | None = None,
     OptionsManager.warn_unused_options
     """
     get_options(obj).warn_unused_options(
-        options_to_ignore=options_to_ignore, obj=obj)
+        options_to_ignore=options_to_ignore, obj=obj,
+        respect_petsc_options_left=respect_petsc_options_left)
