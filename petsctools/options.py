@@ -305,7 +305,8 @@ class OptionsManager:
         return PETSc.Options()
 
     def warn_unused_options(self, options_to_ignore: Iterable | None = None,
-                            obj: Any | None = None):
+                            obj: Any | None = None,
+                            respect_petsc_options_left: bool = False):
         """Log a warning for any unused options.
 
         Parameters
@@ -316,8 +317,16 @@ class OptionsManager:
 
         petsc_obj :
             The PETSc object (e.g. SNES, KSP) associated with this OptionsManager.
-            Used to
+            Used to specify the warning message.
+
+        respect_petsc_options_left :
+            If True then warnings will only be raised if "-options_left" is in the
+            global PETSc.Options() dictionary and the value is >0.
         """
+        if respect_petsc_options_left:
+            if self.options_object.getInt("options_left", 0) == 0:
+                return
+
         options_to_ignore = set(options_to_ignore) or set()
 
         unused_options = self.to_delete - (self._used_options
@@ -566,7 +575,8 @@ def inserted_options(obj):
         yield
 
 
-def warn_unused_options(obj, options_to_ignore: Iterable | None = None):
+def warn_unused_options(obj, options_to_ignore: Iterable | None = None,
+                        respect_petsc_options_left: bool = False):
     """Log a warning for any unused options.
 
     Parameters
@@ -577,6 +587,10 @@ def warn_unused_options(obj, options_to_ignore: Iterable | None = None):
     options_to_ignore :
         List of options for which a warning will not be raised even
         if they were not used. Useful for ignoring any default options.
+
+    respect_petsc_options_left :
+        If True then warnings will only be raised if "-options_left" is in the
+        global PETSc.Options() dictionary and the value is >0.
 
     See Also
     --------
