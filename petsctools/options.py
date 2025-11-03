@@ -120,7 +120,7 @@ def _warn_unused_options(all_options: Iterable, used_options: Iterable,
     """
     unused_options = set(all_options) - set(used_options)
 
-    for option in unused_options:
+    for option in sorted(unused_options):
         warnings.warn(
             f"Unused PETSc option: {options_prefix+option}",
             PetscToolsWarning
