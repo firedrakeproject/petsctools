@@ -227,6 +227,13 @@ class OptionsManager:
         If no trailing underscore is provided, one is appended. Hence
         ``foo_`` and ``foo`` are treated equivalently. As an exception,
         if the prefix is the empty string, no underscore is appended.
+    default_prefix
+        The base string to generate default prefixes. If options_prefix
+        is not provided then one is automatically generated with the form
+        "{default_prefix}_{n}",  where n is a unique integer. Note that
+        because the automatically generated prefixes are not stable any
+        options passed via the command line with a matching prefix
+        will be ignored.
 
     See Also
     --------
@@ -240,7 +247,9 @@ class OptionsManager:
 
     count = itertools.count()
 
-    def __init__(self, parameters: dict, options_prefix: str | None):
+    def __init__(self, parameters: dict,
+                 options_prefix: str | None = None,
+                 default_prefix: str = "petsc"):
         super().__init__()
         if parameters is None:
             parameters = {}
@@ -248,7 +257,9 @@ class OptionsManager:
             # Convert nested dicts
             parameters = flatten_parameters(parameters)
         if options_prefix is None:
-            self.options_prefix = "firedrake_%d_" % next(self.count)
+            if len(default_prefix) and not default_prefix.endswith("_"):
+                default_prefix += "_"
+            self.options_prefix = f"{default_prefix}{next(self.count)}_"
             self.parameters = parameters
             self.to_delete = set(parameters)
         else:

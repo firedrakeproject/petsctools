@@ -74,3 +74,25 @@ def test_unused_options(options_left):
     # Do we only raise a warning for the unused option?
     assert "optobj_not_used" in message
     assert "optobj_used" not in message
+
+
+@pytest.mark.skipnopetsc4py
+def test_options_prefix():
+    """Check that the OptionsManager sets the options prefix correctly.
+    """
+    # Generic default prefix
+    options = petsctools.OptionsManager({})
+    assert options.options_prefix.startswith("petsc")
+
+    # User defined default prefix
+    options = petsctools.OptionsManager({}, default_prefix="firedrake")
+    assert options.options_prefix.startswith("firedrake")
+
+    # Explicit prefix overrides default prefix
+    options = petsctools.OptionsManager({}, options_prefix="myobj")
+    assert options.options_prefix.startswith("myobj")
+
+    # Explicit prefix overrides default prefix
+    options = petsctools.OptionsManager({}, options_prefix="myobj",
+                                        default_prefix="firedrake")
+    assert options.options_prefix.startswith("myobj")
