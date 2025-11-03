@@ -256,14 +256,14 @@ class OptionsManager:
             # Convert nested dicts
             parameters = flatten_parameters(parameters)
         if options_prefix is None:
-            default_prefix = default_prefix or "petsc"
-            if len(default_prefix) and not default_prefix.endswith("_"):
+            default_prefix = default_prefix or "petsc_"
+            if not default_prefix.endswith("_"):
                 default_prefix += "_"
             self.options_prefix = f"{default_prefix}{next(self.count)}_"
             self.parameters = parameters
             self.to_delete = set(parameters)
         else:
-            if len(options_prefix) and not options_prefix.endswith("_"):
+            if options_prefix and not options_prefix.endswith("_"):
                 options_prefix += "_"
             self.options_prefix = options_prefix
             # Remove those options from the dict that were passed on
