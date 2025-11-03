@@ -14,7 +14,11 @@ from .utils import PETSC4PY_INSTALLED
 # is not available then attempting to access these attributes will raise an
 # informative error.
 if PETSC4PY_INSTALLED:
-    from .citation import add_citation, cite, print_citations_at_exit  # noqa: F401
+    from .citation import (  # noqa: F401
+        add_citation,
+        cite,
+        print_citations_at_exit,
+    )
     from .config import get_blas_library  # noqa: F401
     from .init import (  # noqa: F401
         InvalidEnvironmentException,

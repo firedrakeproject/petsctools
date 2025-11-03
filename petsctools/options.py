@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import weakref
 import contextlib
 import functools
 import itertools
 import warnings
-from typing import Any
+from typing import Any, Iterable
 
 import petsc4py
 
@@ -90,10 +91,40 @@ def flatten_parameters(parameters, sep="_"):
         if option in new:
             warnings.warn(
                 f"Ignoring duplicate option: {option} (existing value "
-                f"{new[option]}, new value {value})",
+                f"{new[option]}, new value {value})", PetscToolsWarning
             )
         new[option] = value
     return new
+
+
+def _warn_unused_options(all_options: Iterable, used_options: Iterable,
+                         options_prefix: str = ""):
+    """
+    Raise warnings for PETSc options which were not used.
+
+    This is meant only as a weakref.finalize callback for the OptionsManager.
+
+    Parameters
+    ----------
+    all_options :
+        The full set of options passed to the OptionsManager.
+    used_options :
+        The options which were used during the OptionsManager's lifetime.
+    options_prefix :
+        The options_prefix of the OptionsManager.
+
+    Raises
+    ------
+        PetscToolsWarning :
+            For every entry in all_options which is not in used_options.
+    """
+    unused_options = set(all_options) - set(used_options)
+
+    for option in sorted(unused_options):
+        warnings.warn(
+            f"Unused PETSc option: {options_prefix+option}",
+            PetscToolsWarning
+        )
 
 
 class OptionsManager:
@@ -238,8 +269,17 @@ class OptionsManager:
             # since that does not DTRT for flag options.
             for k, v in self.options_object.getAll().items():
                 if k.startswith(self.options_prefix):
-                    self.parameters[k[len(self.options_prefix) :]] = v
+                    self.parameters[k[len(self.options_prefix):]] = v
         self._setfromoptions = False
+        # Keep track of options used between invocations of inserted_options().
+        self._used_options = set()
+
+        # Decide whether to warn for unused options
+        with self.inserted_options():
+            if self.options_object.getInt("options_left", 0) > 0:
+                weakref.finalize(self, _warn_unused_options,
+                                 self.to_delete, self._used_options,
+                                 options_prefix=self.options_prefix)
 
     def set_default_parameter(self, key: str, val: Any) -> None:
         """Set a default parameter value.
@@ -292,6 +332,8 @@ class OptionsManager:
             yield
         finally:
             for k in self.to_delete:
+                if self.options_object.used(self.options_prefix + k):
+                    self._used_options.add(k)
                 del self.options_object[self.options_prefix + k]
 
     @functools.cached_property
