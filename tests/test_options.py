@@ -82,17 +82,17 @@ def test_options_prefix():
     """
     # Generic default prefix
     options = petsctools.OptionsManager({})
-    assert options.options_prefix.startswith("petsc")
+    assert options.options_prefix.startswith("petsctools_")
 
     # User defined default prefix
     options = petsctools.OptionsManager({}, default_prefix="firedrake")
-    assert options.options_prefix.startswith("firedrake")
+    assert options.options_prefix.startswith("firedrake_")
 
     # Explicit prefix overrides default prefix
     options = petsctools.OptionsManager({}, options_prefix="myobj")
-    assert options.options_prefix.startswith("myobj")
+    assert options.options_prefix.startswith("myobj_")
 
     # Explicit prefix overrides default prefix
     options = petsctools.OptionsManager({}, options_prefix="myobj",
                                         default_prefix="firedrake")
-    assert options.options_prefix.startswith("myobj")
+    assert options.options_prefix.startswith("myobj_")
