@@ -98,7 +98,7 @@ def flatten_parameters(parameters, sep="_"):
 
 
 def _warn_unused_options(all_options: Iterable, used_options: Iterable,
-                         options_prefix: str | None = None):
+                         options_prefix: str = ""):
     """
     Raise warnings for PETSc options which were not used.
 
@@ -118,7 +118,6 @@ def _warn_unused_options(all_options: Iterable, used_options: Iterable,
         PetscToolsWarning :
             For every entry in all_options which is not in used_options.
     """
-    options_prefix = options_prefix or ""
     unused_options = set(all_options) - set(used_options)
 
     for option in unused_options:
