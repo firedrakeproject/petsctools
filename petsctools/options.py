@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import weakref
 import contextlib
 import functools
 import itertools
@@ -94,6 +95,37 @@ def flatten_parameters(parameters, sep="_"):
             )
         new[option] = value
     return new
+
+
+def _warn_unused_options(all_options: Iterable, used_options: Iterable,
+                         options_prefix: str | None = None):
+    """
+    Raise warnings for PETSc options which were not used.
+
+    This is meant only as a weakref.finalize callback for the OptionsManager.
+
+    Parameters
+    ----------
+    all_options :
+        The full set of options passed to the OptionsManager.
+    used_options :
+        The options which were used during the OptionsManager's lifetime.
+    options_prefix :
+        The options_prefix of the OptionsManager.
+
+    Raises
+    ------
+        PetscToolsWarning :
+            For every entry in all_options which is not in used_options.
+    """
+    options_prefix = options_prefix or ""
+    unused_options = set(all_options) - set(used_options)
+
+    for option in unused_options:
+        warnings.warn(
+            f"Unused PETSc option: {options_prefix+option}",
+            PetscToolsWarning
+        )
 
 
 class OptionsManager:
@@ -243,6 +275,13 @@ class OptionsManager:
         # Keep track of options used between invocations of inserted_options().
         self._used_options = set()
 
+        # Decide whether to warn for unused options
+        with self.inserted_options():
+            if self.options_object.getInt("options_left", 0) > 0:
+                weakref.finalize(self, _warn_unused_options,
+                                 self.to_delete, self._used_options,
+                                 options_prefix=self.options_prefix)
+
     def set_default_parameter(self, key: str, val: Any) -> None:
         """Set a default parameter value.
 
@@ -303,46 +342,6 @@ class OptionsManager:
         from petsc4py import PETSc
 
         return PETSc.Options()
-
-    def warn_unused_options(self, options_to_ignore: Iterable | None = None,
-                            obj: Any | None = None,
-                            respect_petsc_options_left: bool = False):
-        """Log a warning for any unused options.
-
-        Parameters
-        ----------
-        options_to_ignore :
-            Set of options for which a warning will not be raised even
-            if they were not used. Useful for ignoring any default options.
-
-        petsc_obj :
-            The PETSc object (e.g. SNES, KSP) associated with this
-            OptionsManager. Used to specify the warning message.
-
-        respect_petsc_options_left :
-            If True then warnings will only be raised if "-options_left" is
-            in the global PETSc.Options() dictionary and the value is >0.
-        """
-        if respect_petsc_options_left:
-            with self.inserted_options():
-                if self.options_object.getInt("options_left", 0) == 0:
-                    return
-
-        options_to_ignore = set(options_to_ignore) or set()
-
-        unused_options = self.to_delete - (self._used_options
-                                           | options_to_ignore)
-
-        if obj is None:
-            object_name = f"object {self.options_prefix}"
-        else:
-            object_name = petscobj2str(obj)
-
-        for option in unused_options:
-            warnings.warn(
-                f"PETSc {object_name} has unused option: {option}",
-                PetscToolsWarning
-            )
 
 
 def petscobj2str(obj: petsc4py.PETSc.Object) -> str:
@@ -574,30 +573,3 @@ def inserted_options(obj):
     """
     with get_options(obj).inserted_options():
         yield
-
-
-def warn_unused_options(obj, options_to_ignore: Iterable | None = None,
-                        respect_petsc_options_left: bool = False):
-    """Log a warning for any unused options.
-
-    Parameters
-    ----------
-    obj :
-        The object with an OptionsManager attached.
-
-    options_to_ignore :
-        List of options for which a warning will not be raised even
-        if they were not used. Useful for ignoring any default options.
-
-    respect_petsc_options_left :
-        If True then warnings will only be raised if "-options_left" is in the
-        global PETSc.Options() dictionary and the value is >0.
-
-    See Also
-    --------
-    OptionsManager
-    OptionsManager.warn_unused_options
-    """
-    get_options(obj).warn_unused_options(
-        options_to_ignore=options_to_ignore, obj=obj,
-        respect_petsc_options_left=respect_petsc_options_left)

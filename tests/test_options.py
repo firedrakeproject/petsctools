@@ -32,13 +32,11 @@ def clear_options():
 
 
 @pytest.mark.skipnopetsc4py
-@pytest.mark.parametrize("respect_petsc_options_left", (True, False),
-                         ids=lambda b: f"respect={b}")
 @pytest.mark.parametrize("options_left", (-1, 0, 1),
                          ids=("no_options_left",
                               "options_left=0",
                               "options_left=1"))
-def test_unused_options(respect_petsc_options_left, options_left):
+def test_unused_options(options_left):
     """Check that unused solver options result in a warning in the log."""
     # PETSc already initialised by module scope fixture
     from petsc4py import PETSc
@@ -49,7 +47,6 @@ def test_unused_options(respect_petsc_options_left, options_left):
     parameters = {
         "used": 1,
         "not_used": 2,
-        "ignored": 3,
     }
     options = petsctools.OptionsManager(parameters, options_prefix="optobj")
 
@@ -57,18 +54,14 @@ def test_unused_options(respect_petsc_options_left, options_left):
         _ = PETSc.Options().getInt(options.options_prefix + "used")
 
     # No warnings should be raised in this case.
-    if respect_petsc_options_left and (options_left <= 0):
+    if options_left <= 0:
         with warnings.catch_warnings():
             warnings.simplefilter("error")
-            options.warn_unused_options(
-                options_to_ignore={"ignored"},
-                respect_petsc_options_left=respect_petsc_options_left)
+            del options
         return
 
     with pytest.warns() as records:
-        options.warn_unused_options(
-            options_to_ignore={"ignored"},
-            respect_petsc_options_left=respect_petsc_options_left)
+        del options
 
     # Exactly one option is both unused and not ignored
     assert len(records) == 1
@@ -77,8 +70,6 @@ def test_unused_options(respect_petsc_options_left, options_left):
     # Does the warning include the options prefix?
     assert "optobj" in message
 
-    # Do we only raise a warning for the unused option that isn't ignored?
-    # Need a space before the option because ("used" in "not_used") == True
-    assert " not_used" in message
-    assert " used" not in message
-    assert " ignored" not in message
+    # Do we only raise a warning for the unused option?
+    assert "optobj_not_used" in message
+    assert "optobj_used" not in message
