@@ -60,6 +60,7 @@ def test_unused_options(options_left):
             del options
         return
 
+    # Destroying the object will trigger the unused options warning
     with pytest.warns() as records:
         del options
 
