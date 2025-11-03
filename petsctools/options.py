@@ -256,7 +256,7 @@ class OptionsManager:
             # Convert nested dicts
             parameters = flatten_parameters(parameters)
         if options_prefix is None:
-            default_prefix = default_prefix or "petsc_"
+            default_prefix = default_prefix or "petsctools_"
             if not default_prefix.endswith("_"):
                 default_prefix += "_"
             self.options_prefix = f"{default_prefix}{next(self.count)}_"
