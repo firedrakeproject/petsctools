@@ -38,6 +38,7 @@ if PETSC4PY_INSTALLED:
         inserted_options,
         set_default_parameter,
     )
+    from .pc import PCBase  # noqa: F401
 else:
 
     def __getattr__(name):
@@ -60,6 +61,7 @@ else:
             "is_set_from_options",
             "inserted_options",
             "set_default_parameter",
+            "PCBase",
         }
         if name in petsc4py_attrs:
             raise ImportError(
