@@ -606,7 +606,7 @@ def inserted_options(obj):
 
 
 def get_default_options(base_prefix: str, custom_prefix_endings: str,
-                        options: petsc4py.PETSc.Options | None =None) -> dict:
+                        options: petsc4py.PETSc.Options | None = None) -> dict:
     """
     Extract default options for subsolvers with similar prefixes.
 
@@ -619,9 +619,9 @@ def get_default_options(base_prefix: str, custom_prefix_endings: str,
     subsolver.
 
     Given a base prefix (e.g. 'fieldsplit') and a set of custom prefix endings
-    (e.g.  '0', '1'), this function will return a dictionary of all options with
-    the base prefix except those which start with the base prefix and one of the
-    custom endings.
+    (e.g.  '0', '1'), this function will return a dictionary of all options
+    with the base prefix except those which start with the base prefix and one
+    of the custom endings.
 
     For example, to set up a fieldsplit solver you might have the following
     options, where both fields are to use ILU as the preconditioner.
@@ -631,7 +631,6 @@ def get_default_options(base_prefix: str, custom_prefix_endings: str,
        -fieldsplit_pc_type ilu
        -fieldsplit_0_ksp_type preonly
        -fieldsplit_1_ksp_type richardson
-       -fielspllit_1_ksp_richardson_scale 0.9
 
     To get a dictionary with just the default option ({'pc_type': 'ilu'}) you
     would call:
@@ -651,6 +650,9 @@ def get_default_options(base_prefix: str, custom_prefix_endings: str,
         The ends of each individual custom prefix. Usually a range of integers.
         Each one will be converted to a string and have an underscore appended
         if it does not already have one.
+    options :
+        The PETSc.Options database to use. If not provided then the global
+        database will be used.
 
     Returns
     -------
