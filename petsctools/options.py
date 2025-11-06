@@ -586,6 +586,16 @@ def inserted_options(obj):
     """Context manager inside which the PETSc options database
     contains the parameters from this object's OptionsManager.
 
+    Parameters
+    ----------
+    obj :
+        The object which may have been set from options.
+
+    Raises
+    ------
+    PetscToolsException
+        If the object does not have an OptionsManager.
+
     See Also
     --------
     OptionsManager
@@ -593,3 +603,78 @@ def inserted_options(obj):
     """
     with get_options(obj).inserted_options():
         yield
+
+
+def get_default_options(base_prefix: str, custom_prefix_endings: str,
+                        options: petsc4py.PETSc.Options | None =None) -> dict:
+    """
+    Extract default options for subsolvers with similar prefixes.
+
+    Some solvers, e.g. PCFieldsplit, create multiple subsolvers whose prefixes
+    differ only by the final characters, e.g. 'fieldsplit_0', 'fieldsplit_1'.
+    It is often useful to be able to set default options for these subsolvers
+    using the un-specialised prefix e.g. 'fieldsplit_ksp_type'. However, just
+    grabbing all options with the 'fieldsplit' prefix will erroneously find
+    options like '0_ksp_type' and '1_ksp_type' that were meant for a specific
+    subsolver.
+
+    Given a base prefix (e.g. 'fieldsplit') and a set of custom prefix endings
+    (e.g.  '0', '1'), this function will return a dictionary of all options with
+    the base prefix except those which start with the base prefix and one of the
+    custom endings.
+
+    For example, to set up a fieldsplit solver you might have the following
+    options, where both fields are to use ILU as the preconditioner.
+
+    .. code-block:: python3
+
+       -fieldsplit_pc_type ilu
+       -fieldsplit_0_ksp_type preonly
+       -fieldsplit_1_ksp_type richardson
+       -fielspllit_1_ksp_richardson_scale 0.9
+
+    To get a dictionary with just the default option ({'pc_type': 'ilu'}) you
+    would call:
+
+    .. code-block:: python3
+
+       defaults = get_default_options(base_prefix='fieldsplit',
+                                      custom_prefix_endings=('0', '1'))
+
+    Parameters
+    ----------
+    base_prefix :
+        The prefix for the default options, which must be the beginning of
+        each full custom prefix. If this does not end in an underscore then
+        one will be added.
+    custom_prefix_endings :
+        The ends of each individual custom prefix. Usually a range of integers.
+        Each one will be converted to a string and have an underscore appended
+        if it does not already have one.
+
+    Returns
+    -------
+        The dictionary of default options with the base prefix stripped.
+    """
+    if options is None:
+        from petsc4py import PETSc
+        options = PETSc.Options()
+
+    if not base_prefix.endswith("_"):
+        base_prefix += "_"
+    custom_prefixes = [base_prefix + str(ending)
+                       for ending in custom_prefix_endings]
+    for prefix in custom_prefixes:
+        if not prefix.endswith("_"):
+            prefix += "_"
+
+    default_options = {
+        k.removeprefix(base_prefix): v
+        for k, v in options.getAll().items()
+        if (k.startswith(base_prefix)
+            and not any(k.startswith(prefix) for prefix in custom_prefixes))
+    }
+    assert not any(k.startswith(str(end))
+                   for k in default_options.keys()
+                   for end in custom_prefix_endings)
+    return default_options
