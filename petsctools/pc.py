@@ -2,10 +2,6 @@ import abc
 from .exceptions import PetscToolsException
 
 
-def obj_name(obj):
-    return f"{type(obj).__module__}.{type(obj).__name__}"
-
-
 class PCBase(abc.ABC):
     """Abstract base class for python type PETSc PCs.
 
