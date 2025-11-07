@@ -29,13 +29,13 @@ class PCBase(abc.ABC):
             A, P = pc.getOperators()
             pcname = f"{type(self).__module__}.{type(self).__name__}"
             if self.needs_python_amat:
-                atype = A.getType()
+                atype = A.type
                 if atype != "python":
                     raise ValueError(
                         f"PC {pcname} needs a python type amat, not {atype}")
                 self.amat = A.getPythonContext()
             if self.needs_python_pmat:
-                ptype = P.getType()
+                ptype = P.type
                 if ptype != "python":
                     raise ValueError(
                         f"PC {pcname} needs a python type pmat, not {ptype}")
