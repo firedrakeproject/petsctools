@@ -1,4 +1,5 @@
 import abc
+from .exceptions import PetscToolsException
 
 
 def obj_name(obj):
@@ -36,14 +37,16 @@ class PCBase(abc.ABC):
     and ``parent_prefix+self.prefix``).
 
     Inheriting classes should implement the following methods:
-    - ``initialize``
-    - ``update``
-    - ``apply``
+
+    * ``initialize``
+    * ``update``
+    * ``apply``
 
     They should also set the following class attributes:
-    - ``prefix``
-    - ``needs_python_amat`` (optional, defaults to False).
-    - ``needs_python_pmat`` (optional, defaults to False).
+
+    * ``prefix``
+    * ``needs_python_amat`` (optional, defaults to False).
+    * ``needs_python_pmat`` (optional, defaults to False).
 
     Notes
     -----
@@ -61,6 +64,9 @@ class PCBase(abc.ABC):
     needs_python_pmat = False
     """Set this to False if the P matrix needs to be Python (matfree)."""
 
+    prefix = None
+    """The options prefix of this PC."""
+
     def __init__(self):
         self.initialized = False
 
@@ -75,20 +81,24 @@ class PCBase(abc.ABC):
             self.update(pc)
         else:
             if pc.getType() != "python":
-                raise ValueError("Expecting PC type python")
+                raise PetscToolsException("Expecting PC type python")
 
             A, P = pc.getOperators()
             pcname = f"{type(self).__module__}.{type(self).__name__}"
             if self.needs_python_amat:
                 if A.type != "python":
-                    raise ValueError(
+                    raise PetscToolsException(
                         f"PC {pcname} needs a python type amat, not {A.type}")
                 self.amat = A.getPythonContext()
             if self.needs_python_pmat:
                 if P.type != "python":
-                    raise ValueError(
+                    raise PetscToolsException(
                         f"PC {pcname} needs a python type pmat, not {P.type}")
                 self.pmat = P.getPythonContext()
+
+            if not isinstance(self.prefix, str):
+                raise PetscToolsException(
+                    f"{pcname}.prefix must be a str not {type(self.prefix)}")
 
             self.parent_prefix = pc.getOptionsPrefix() or ""
             self.full_prefix = self.parent_prefix + self.prefix
