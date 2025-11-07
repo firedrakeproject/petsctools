@@ -123,6 +123,9 @@ class PCBase(abc.ABC):
 
         This method is called the on second and later times that the
         ``setUp`` method is called.
+
+        This method is not needed for all preconditioners and can often
+        be a no-op.
         """
         pass
 
