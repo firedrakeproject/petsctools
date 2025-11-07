@@ -12,15 +12,17 @@ class PCBase(abc.ABC):
     for python type preconditioners.
 
     1. Checking whether the PC operators are of python type.
+
        Often a python type preconditioner will rely on the Mat operators
        also being of python type. If the ``needs_python_amat`` and/or
        ``needs_python_pmat`` attributes are set then the type of the
-       ``A, P = pc.getOperators()`` will be checked, and an error raised
-       if they are not python type.
-       If they are python type then their python contexts will be added
-       as the attributes ``amat`` and/or ``pmat`` (e.g. A.getPythonContext()).
+       ``pc.getOperators()`` will be checked, and an error raised if they
+       are not python type. If they are python type then their python contexts
+       will be added as the attributes ``amat`` and/or ``pmat`` (e.g.
+       ``A.getPythonContext()``).
 
     2. Separating code to initialize and update the preconditioner.
+
        Often there are operations to set up the preconditioner which only
        need to be run once, and operations that are needed each time the
        preconditioner is updated. The ``setUp`` method will call the user
@@ -30,27 +32,27 @@ class PCBase(abc.ABC):
     Inheriting classes should also set the ``prefix`` attribute.
     The attributes ``parent_prefix`` and ``full_prefix`` will then be set,
     where ``parent_prefix`` is the unqualified pc prefix and ``full_prefix``
-    is the qualified prefix of this context (i.e. pc.getOptionsPrefix() and
-    parent_prefix+self.prefix).
+    is the qualified prefix of this context (i.e. ``pc.getOptionsPrefix()``
+    and ``parent_prefix+self.prefix``).
 
     Inheriting classes should implement the following methods:
-    * initialize
-    * update
-    * apply
+    - ``initialize``
+    - ``update``
+    - ``apply``
 
     They should also set the following class attributes:
-    * prefix
-    * needs_python_amat (optional, defaults to False).
-    * needs_python_pmat (optional, defaults to False).
+    - ``prefix``
+    - ``needs_python_amat`` (optional, defaults to False).
+    - ``needs_python_pmat`` (optional, defaults to False).
 
     Notes
     -----
-    The ``update`` method is not called on the first call to setUp(), so for
-    some preconditioners it may be necessary to call ``update`` at the end of
-    the ``initialize`` method.
+    The ``update`` method is not called on the first call to ``setUp()``, so
+    for some preconditioners it may be necessary to call ``update`` at the end
+    of the ``initialize`` method.
 
-    If the ``prefix`` attribute does not end in an underscore ("_") then one
-    will automatically be appended to the ``full_prefix`` attribute.
+    If the ``prefix`` attribute does not end in an underscore (``"_"``) then
+    one will automatically be appended to the ``full_prefix`` attribute.
     """
 
     needs_python_amat = False
