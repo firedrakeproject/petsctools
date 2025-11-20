@@ -133,6 +133,8 @@ def _warn_unused_options(all_options: Iterable, used_options: Iterable,
 def _validate_prefix(prefix):
     """Valid prefixes are strings ending with an underscore.
     """
+    if prefix is None:
+        raise ValueError("Cannot validate None as a prefix")
     prefix = str(prefix)
     if prefix and not prefix.endswith("_"):
         prefix += "_"
