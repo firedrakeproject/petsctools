@@ -385,7 +385,7 @@ class OptionsManager:
         command line with a matching prefix will be ignored.
     default_options_set
         The prefix set for any default shared with other solvers.
-        See ``DefaultOptionSet`` for more information.
+        See :class:`DefaultOptionSet` for more information.
 
     See Also
     --------
@@ -451,7 +451,8 @@ class OptionsManager:
 
             # Update using the parameters passed in the code but
             # exclude those options from the dict that were passed
-            # on the commandline.
+            # on the commandline because those have global scope and are
+            # not under the control of the options manager.
             self.parameters.update({
                 k: v
                 for k, v in parameters.items()
