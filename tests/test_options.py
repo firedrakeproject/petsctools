@@ -96,3 +96,60 @@ def test_options_prefix():
     options = petsctools.OptionsManager({}, options_prefix="myobj",
                                         default_prefix="firedrake")
     assert options.options_prefix.startswith("myobj_")
+
+
+@pytest.mark.skipnopetsc4py
+def test_default_options():
+    from petsc4py import PETSc
+
+    parameters = {
+        'options_left': 0,
+        'unrelated_option': 0,
+        'base_opt1': 1,
+        'base_opt2': 2,
+        'base_opt3': 3,
+        'base_0_opt3': 4,
+        'base_1_opt3': 5,
+        'base_2_opt4': 6,
+    }
+    options = PETSc.Options()
+    for k, v in parameters.items():
+        options[k] = v
+
+    # default_options = {"opt1": 1, "opt2": 2, "opt3": 3}
+    default_option_set = petsctools.DefaultOptionSet(
+        base_prefix="base", custom_prefix_endings=("0", "1", "2"))
+
+    # test default is overriden by command line
+    options0 = petsctools.OptionsManager(
+        parameters={},
+        options_prefix="base_0",
+        default_options_set=default_option_set)
+
+    # test defaults is overriden by command line and source-code
+    options1 = petsctools.OptionsManager(
+        parameters={"opt2": "7"},
+        options_prefix="base_1",
+        default_options_set=default_option_set)
+
+    # test both defaults and non-defaults are picked up
+    options2 = petsctools.OptionsManager(
+        parameters={},
+        options_prefix="base_2",
+        default_options_set=default_option_set)
+
+    assert len(options0.parameters) == 3
+    assert options0.parameters["opt1"] == "1"
+    assert options0.parameters["opt2"] == "2"
+    assert options0.parameters["opt3"] == "4"
+
+    assert len(options1.parameters) == 3
+    assert options1.parameters["opt1"] == "1"
+    assert options1.parameters["opt2"] == "7"
+    assert options1.parameters["opt3"] == "5"
+
+    assert len(options2.parameters) == 4
+    assert options2.parameters["opt1"] == "1"
+    assert options2.parameters["opt2"] == "2"
+    assert options2.parameters["opt3"] == "3"
+    assert options2.parameters["opt4"] == "6"
