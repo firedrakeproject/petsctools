@@ -103,14 +103,16 @@ def _warn_unused_options(all_options: Iterable, used_options: Iterable,
     """
     Raise warnings for PETSc options which were not used.
 
-    This is meant only as a weakref.finalize callback for the :class:`OptionsManager`.
+    This is meant only as a weakref.finalize callback for the
+    :class:`OptionsManager`.
 
     Parameters
     ----------
     all_options :
         The full set of options passed to the :class:`OptionsManager`.
     used_options :
-        The options which were used during the :class:`OptionsManager`'s lifetime.
+        The options which were used during the :class:`OptionsManager`'s
+        lifetime.
     options_prefix :
         The options_prefix of the :class:`OptionsManager`.
 
@@ -152,7 +154,10 @@ class DefaultOptionSet:
     ``DefaultOptionSet`` defines a base prefix (e.g. ``'fieldsplit'``) and a
     set of custom prefix endings (e.g.  ``[0, 1]``). If passed to an
     :class:`OptionsManager` then any default options present in the global
-    options database will be used if those options
+    options database will be used if those options are not present either:
+    in the ``parameters`` passed to the :class:`OptionsManager`; or in the
+    global ``PETSc.Options`` database with the ``options_prefix`` passed to
+    the :class:`OptionsManager`.
 
     For example, to set up a fieldsplit solver you might have the following
     options, where both fields are to use ILU as the preconditioner but each
@@ -594,7 +599,8 @@ def attach_options(
 
 
 def has_options(obj: petsc4py.PETSc.Object) -> bool:
-    """Return whether this PETSc object has an :class:`OptionsManager` attached.
+    """Return whether this PETSc object has an :class:`OptionsManager`
+    attached.
 
     Parameters
     ----------
@@ -649,7 +655,8 @@ def get_options(obj: petsc4py.PETSc.Object) -> OptionsManager:
 def set_default_parameter(
     obj: petsc4py.PETSc.Object, key: str, val: Any
 ) -> None:
-    """Set a default parameter value in the :class:`OptionsManager` of a PETSc object.
+    """Set a default parameter value in the :class:`OptionsManager` of a
+    PETSc object.
 
     Parameters
     ----------
@@ -757,7 +764,8 @@ def set_from_options(
 
 def is_set_from_options(obj: petsc4py.PETSc.Object) -> bool:
     """
-    Return whether this PETSc object has been set by the :class:`OptionsManager`.
+    Return whether this PETSc object has been set by the
+    :class:`OptionsManager`.
 
     Parameters
     ----------
