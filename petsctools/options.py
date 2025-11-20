@@ -134,7 +134,7 @@ def _validate_prefix(prefix):
     """Valid prefixes are strings ending with an underscore.
     """
     prefix = str(prefix)
-    if not prefix.endswith("_"):
+    if prefix and not prefix.endswith("_"):
         prefix += "_"
     return prefix
 
