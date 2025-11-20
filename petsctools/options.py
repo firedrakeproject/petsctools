@@ -103,16 +103,16 @@ def _warn_unused_options(all_options: Iterable, used_options: Iterable,
     """
     Raise warnings for PETSc options which were not used.
 
-    This is meant only as a weakref.finalize callback for the OptionsManager.
+    This is meant only as a weakref.finalize callback for the :class:`OptionsManager`.
 
     Parameters
     ----------
     all_options :
-        The full set of options passed to the OptionsManager.
+        The full set of options passed to the :class:`OptionsManager`.
     used_options :
-        The options which were used during the OptionsManager's lifetime.
+        The options which were used during the :class:`OptionsManager`'s lifetime.
     options_prefix :
-        The options_prefix of the OptionsManager.
+        The options_prefix of the :class:`OptionsManager`.
 
     Raises
     ------
@@ -142,17 +142,17 @@ class DefaultOptionSet:
     Defines a set of common default options shared by multiple PETSc objects.
 
     Some solvers, e.g. PCFieldsplit, create multiple subsolvers whose prefixes
-    differ only by the final characters, e.g. 'fieldsplit_0', 'fieldsplit_1'.
-    It is often useful to be able to set default options for these subsolvers
-    using the un-specialised prefix e.g. 'fieldsplit_ksp_type'. However, just
-    grabbing all options with the 'fieldsplit' prefix will erroneously find
-    options like '0_ksp_type' and '1_ksp_type' that were meant for a specific
-    subsolver.
+    differ only by the final characters, e.g. ``'fieldsplit_0'``,
+    ``'fieldsplit_1'``.  It is often useful to be able to set default options
+    for these subsolvers using the un-specialised prefix e.g.
+    ``'fieldsplit_ksp_type'``. However, just grabbing all options with the
+    ``'fieldsplit'`` prefix will erroneously find options like ``'0_ksp_type'``
+    and ``'1_ksp_type'`` that were meant for a specific subsolver.
 
-    DefaultOptionSet defines a base prefix (e.g. 'fieldsplit') and a set of
-    custom prefix endings (e.g.  [0, 1]). If passed to an ``OptionsManager``
-    then any default options present in the global options database will be
-    used if those options
+    ``DefaultOptionSet`` defines a base prefix (e.g. ``'fieldsplit'``) and a
+    set of custom prefix endings (e.g.  ``[0, 1]``). If passed to an
+    :class:`OptionsManager` then any default options present in the global
+    options database will be used if those options
 
     For example, to set up a fieldsplit solver you might have the following
     options, where both fields are to use ILU as the preconditioner but each
@@ -164,7 +164,7 @@ class DefaultOptionSet:
        -fieldsplit_0_ksp_type preonly
        -fieldsplit_1_ksp_type richardson
 
-    To create an OptionsManager for each field you would call:
+    To create an :class:`OptionsManager` for each field you would call:
 
     .. code-block:: python3
 
@@ -182,7 +182,7 @@ class DefaultOptionSet:
             options_prefix="fieldsplit_1",
            default_options_set=default_options_set)
 
-    Attributes
+    Parameters
     ----------
     base_prefix :
         The prefix for the default options, which is the beginning of
@@ -215,14 +215,17 @@ class DefaultOptionSet:
 
     @property
     def base_prefix(self):
+        """The prefix for the default options."""
         return self._base_prefix
 
     @property
     def custom_prefix_endings(self):
+        """The ends of each individual custom prefix."""
         return self._custom_prefix_endings
 
     @cached_property
     def custom_prefixes(self):
+        """The full custom prefixes."""
         return tuple(self.base_prefix + ending
                      for ending in self.custom_prefix_endings)
 
@@ -234,10 +237,10 @@ def get_default_options(default_options_set: DefaultOptionSet,
 
     Parameters
     ----------
-    default_options_set :
-        The DefaultOptionSet which defines the shared options.
-    options :
-        The PETSc.Options database to use. If not provided then the global
+    default_options_set
+        The :class:`DefaultOptionSet` which defines the shared options.
+    options
+        The ``PETSc.Options`` database to use. If not provided then the global
         database will be used.
 
     Returns
@@ -273,9 +276,9 @@ class OptionsManager:
     """Class that helps with managing setting PETSc options.
 
     The recommended way to use the ``OptionsManager`` is by using the
-    ``attach_options``, ``set_from_options``, and ``inserted_options``
-    free functions. These functions ensure that each ``OptionsManager``
-    is associated to a single PETSc object.
+    :func:`attach_options`, :func:`set_from_options`, and
+    :func:`inserted_options` free functions. These functions ensure that
+    each ``OptionsManager`` is associated to a single PETSc object.
 
     For detail on the previous approach of using ``OptionsManager``
     as a mixin class (where the user takes responsibility for ensuring
@@ -284,15 +287,15 @@ class OptionsManager:
     To use the ``OptionsManager``:
 
     1. Pass a PETSc object a parameters dictionary, and optionally
-       an options prefix, to ``attach_options``. This will create an
-       ``OptionsManager`` and set the prefix of the PETSc object,
+       an options prefix, to :func:`attach_options`. This will create
+       an ``OptionsManager`` and set the prefix of the PETSc object,
        but will not yet set it up.
-    2. Once the object is ready, pass it to ``set_from_options``,
+    2. Once the object is ready, pass it to :func:`set_from_options`,
        which will insert the solver options into ``PETSc.Options``
        and call ``obj.setFromOptions``.
-    3. The ``inserted_options`` context manager must be used when
-       calling methods on the PETSc object within which solver
-       options will be read, for example ``solve``.
+    3. The :func:`inserted_options` context manager must be used when
+       calling methods on the PETSc object within which solver options
+       will be read, for example ``solve``.
        This will insert the provided ``parameters`` into PETSc's
        global options dictionary within the context manager, and
        remove them afterwards. This ensures that the global options
@@ -316,8 +319,8 @@ class OptionsManager:
        with inserted_options(ksp):
            ksp.solve(b, x)
 
-    To access the OptionsManager for a PETSc object directly, use
-    the ``get_options`` function:
+    To access the ``OptionsManager`` for a PETSc object directly
+    use the :func:`get_options` function:
 
     .. code-block:: python3
 
@@ -337,7 +340,7 @@ class OptionsManager:
     So that the runtime monitors which look in the options database
     actually see options, you need to ensure that the options database
     is populated at the time of a ``SNESSolve`` or ``KSPSolve`` call.
-    Do that using the `OptionsManager.inserted_options` context manager.
+    Do that using the :meth:`OptionsManager.inserted_options` context manager.
 
     If using as a mixin class, call the ``OptionsManager`` methods
     directly:
@@ -554,12 +557,12 @@ def attach_options(
     default_prefix: str | None = None,
     default_options_set: DefaultOptionSet | None = None
 ) -> None:
-    """Set up an OptionsManager and attach it to a PETSc Object.
+    """Set up an :class:`OptionsManager` and attach it to a PETSc Object.
 
     Parameters
     ----------
     obj
-        The object to attach an OptionsManager to.
+        The object to attach an :class:`OptionsManager` to.
     parameters
         The dictionary of parameters to use.
     options_prefix
@@ -591,20 +594,22 @@ def attach_options(
 
 
 def has_options(obj: petsc4py.PETSc.Object) -> bool:
-    """Return whether this PETSc object has an OptionsManager attached.
+    """Return whether this PETSc object has an :class:`OptionsManager` attached.
 
     Parameters
     ----------
     obj
-        The object which may have an OptionsManager.
+        The object which may have an :class:`OptionsManager`.
 
     Returns
     -------
-        Whether the object has an OptionsManager.
+        Whether the object has an :class:`OptionsManager`.
 
     See Also
     --------
     OptionsManager
+    attach_options
+    set_from_options
     """
     return "options" in obj.getDict() and isinstance(
         obj.getAttr("options"), OptionsManager
@@ -612,25 +617,27 @@ def has_options(obj: petsc4py.PETSc.Object) -> bool:
 
 
 def get_options(obj: petsc4py.PETSc.Object) -> OptionsManager:
-    """Return the OptionsManager attached to this PETSc object.
+    """Return the :class:`OptionsManager` attached to this PETSc object.
 
     Parameters
     ----------
     obj
-        The object to get the OptionsManager from.
+        The object to get the :class:`OptionsManager` from.
 
     Returns
     -------
-        The OptionsManager attached to the object.
+        The :class:`OptionsManager` attached to the object.
 
     Raises
     ------
     PetscToolsException
-        If the object does not have an OptionsManager.
+        If the object does not have an :class:`OptionsManager`.
 
     See Also
     --------
     OptionsManager
+    attach_options
+    set_from_options
     """
     if not has_options(obj):
         raise PetscToolsException(
@@ -642,12 +649,12 @@ def get_options(obj: petsc4py.PETSc.Object) -> OptionsManager:
 def set_default_parameter(
     obj: petsc4py.PETSc.Object, key: str, val: Any
 ) -> None:
-    """Set a default parameter value in the OptionsManager of a PETSc object.
+    """Set a default parameter value in the :class:`OptionsManager` of a PETSc object.
 
     Parameters
     ----------
     obj
-        The object to get the OptionsManager from.
+        The object to get the :class:`OptionsManager` from.
     key
         The options parameter name
     val
@@ -656,12 +663,14 @@ def set_default_parameter(
     Raises
     ------
     PetscToolsException
-        If the object does not have an OptionsManager.
+        If the object does not have an :class:`OptionsManager`.
 
     See Also
     --------
     OptionsManager
     OptionsManager.set_default_parameter
+    attach_options
+    set_from_options
     """
     get_options(obj).set_default_parameter(key, val)
 
@@ -673,7 +682,7 @@ def set_from_options(
     default_prefix: str | None = None,
     default_options_set: DefaultOptionSet | None = None
 ) -> None:
-    """Set up a PETSc object from the options in its OptionsManager.
+    """Set up a PETSc object from the options in its :class:`OptionsManager`.
 
     Calls ``obj.setOptionsPrefix`` and ``obj.setFromOptions`` whilst
     inside the ``inserted_options`` context manager, which ensures
@@ -702,10 +711,10 @@ def set_from_options(
     ------
     PetscToolsException
         If the neither ``parameters`` nor ``options_prefix`` are
-        provided but ``obj`` does not have an OptionsManager attached.
+        provided but ``obj`` does not have an :class:`OptionsManager` attached.
     PetscToolsException
         If the either ``parameters`` or ``options_prefix`` are provided
-        but ``obj`` already has an OptionsManager attached.
+        but ``obj`` already has an :class:`OptionsManager` attached.
     PetscToolsWarning
         If set_from_options has already been called for this object.
 
@@ -748,7 +757,7 @@ def set_from_options(
 
 def is_set_from_options(obj: petsc4py.PETSc.Object) -> bool:
     """
-    Return whether this PETSc object has been set by the OptionsManager.
+    Return whether this PETSc object has been set by the :class:`OptionsManager`.
 
     Parameters
     ----------
@@ -762,11 +771,13 @@ def is_set_from_options(obj: petsc4py.PETSc.Object) -> bool:
     Raises
     ------
     PetscToolsException
-        If the object does not have an OptionsManager.
+        If the object does not have an :class:`OptionsManager`.
 
     See Also
     --------
     OptionsManager
+    attach_options
+    set_from_options
     """
     return get_options(obj)._setfromoptions
 
@@ -774,7 +785,7 @@ def is_set_from_options(obj: petsc4py.PETSc.Object) -> bool:
 @contextlib.contextmanager
 def inserted_options(obj):
     """Context manager inside which the PETSc options database
-    contains the parameters from this object's OptionsManager.
+    contains the parameters from this object's :class:`OptionsManager`.
 
     Parameters
     ----------
@@ -784,12 +795,14 @@ def inserted_options(obj):
     Raises
     ------
     PetscToolsException
-        If the object does not have an OptionsManager.
+        If the object does not have an :class:`OptionsManager`.
 
     See Also
     --------
     OptionsManager
     OptionsManager.inserted_options
+    attach_options
+    set_from_options
     """
     with get_options(obj).inserted_options():
         yield
