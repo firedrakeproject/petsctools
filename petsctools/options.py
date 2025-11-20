@@ -5,6 +5,7 @@ import contextlib
 import functools
 import itertools
 import warnings
+from functools import cached_property
 from typing import Any, Iterable
 
 import petsc4py
@@ -127,6 +128,147 @@ def _warn_unused_options(all_options: Iterable, used_options: Iterable,
         )
 
 
+def _validate_prefix(prefix):
+    """Valid prefixes are strings ending with an underscore.
+    """
+    prefix = str(prefix)
+    if not prefix.endswith("_"):
+        prefix += "_"
+    return prefix
+
+
+class DefaultOptionSet:
+    """
+    Defines a set of common default options shared by multiple PETSc objects.
+
+    Some solvers, e.g. PCFieldsplit, create multiple subsolvers whose prefixes
+    differ only by the final characters, e.g. 'fieldsplit_0', 'fieldsplit_1'.
+    It is often useful to be able to set default options for these subsolvers
+    using the un-specialised prefix e.g. 'fieldsplit_ksp_type'. However, just
+    grabbing all options with the 'fieldsplit' prefix will erroneously find
+    options like '0_ksp_type' and '1_ksp_type' that were meant for a specific
+    subsolver.
+
+    DefaultOptionSet defines a base prefix (e.g. 'fieldsplit') and a set of
+    custom prefix endings (e.g.  [0, 1]). If passed to an ``OptionsManager``
+    then any default options present in the global options database will be
+    used if those options
+
+    For example, to set up a fieldsplit solver you might have the following
+    options, where both fields are to use ILU as the preconditioner but each
+    field uses a different KSP type.
+
+    .. code-block:: python3
+
+       -fieldsplit_pc_type ilu
+       -fieldsplit_0_ksp_type preonly
+       -fieldsplit_1_ksp_type richardson
+
+    To create an OptionsManager for each field you would call:
+
+    .. code-block:: python3
+
+       default_options_set = DefaultOptionSet(
+            base_prefix='fieldsplit',
+            custom_prefix_endings=(0, 1))
+
+       fieldsplit_0_options = OptionsManager(
+           parameters={},
+            options_prefix="fieldsplit_0",
+           default_options_set=default_options_set)
+
+       fieldsplit_1_options = OptionsManager(
+           parameters={},
+            options_prefix="fieldsplit_1",
+           default_options_set=default_options_set)
+
+    Attributes
+    ----------
+    base_prefix :
+        The prefix for the default options, which is the beginning of
+        each full custom prefix.
+    custom_prefix_endings :
+        The ends of each individual custom prefix. Often a range of integers.
+
+    Notes
+    -----
+    The base prefix and each custom prefix ending will be converted to a
+    string and have an underscore appended if they do not already have one.
+
+    See Also
+    --------
+    OptionsManager
+    get_default_options
+    attach_options
+    set_from_options
+    """
+
+    def __init__(self, base_prefix: str, custom_prefix_endings: Iterable):
+        if not custom_prefix_endings:
+            raise ValueError("custom_prefix_endings cannot be empty")
+
+        base_prefix = _validate_prefix(base_prefix)
+
+        self._base_prefix = base_prefix
+        self._custom_prefix_endings = tuple(
+            _validate_prefix(end) for end in custom_prefix_endings)
+
+    @property
+    def base_prefix(self):
+        return self._base_prefix
+
+    @property
+    def custom_prefix_endings(self):
+        return self._custom_prefix_endings
+
+    @cached_property
+    def custom_prefixes(self):
+        return tuple(self.base_prefix + ending
+                     for ending in self.custom_prefix_endings)
+
+
+def get_default_options(default_options_set: DefaultOptionSet,
+                        options: petsc4py.PETSc.Options | None = None) -> dict:
+    """
+    Extract default options for subsolvers with similar prefixes.
+
+    Parameters
+    ----------
+    default_options_set :
+        The DefaultOptionSet which defines the shared options.
+    options :
+        The PETSc.Options database to use. If not provided then the global
+        database will be used.
+
+    Returns
+    -------
+        The dictionary of default options with the base prefix stripped.
+
+    See Also
+    --------
+    DefaultOptionSet
+    """
+    if options is None:
+        from petsc4py import PETSc
+        options = PETSc.Options()
+
+    base_prefix = default_options_set.base_prefix
+    custom_prefixes = default_options_set.custom_prefixes
+    custom_prefix_endings = default_options_set.custom_prefix_endings
+
+    default_options = {
+        k.removeprefix(base_prefix): v
+        for k, v in options.getAll().items()
+        if (k.startswith(base_prefix)
+            and not any(k.startswith(prefix) for prefix in custom_prefixes))
+    }
+    # Sanity check, this should never happen.
+    assert not any(k.startswith(str(end))
+                   for k in default_options.keys()
+                   for end in custom_prefix_endings)
+    return default_options
+
+
 class OptionsManager:
     """Class that helps with managing setting PETSc options.
 
@@ -233,6 +375,9 @@ class OptionsManager:
         form "{default_prefix}_{n}", where n is a unique integer. Note that
         because the unique integer is not stable any options passed via the
         command line with a matching prefix will be ignored.
+    default_options_set
+        The prefix set for any default shared with other solvers.
+        See ``DefaultOptionSet`` for more information.
 
     See Also
     --------
@@ -242,38 +387,70 @@ class OptionsManager:
     set_from_options
     is_set_from_options
     inserted_options
+    DefaultOptionSet
     """
 
     count = itertools.count()
 
     def __init__(self, parameters: dict,
                  options_prefix: str | None = None,
-                 default_prefix: str | None = None):
+                 default_prefix: str | None = None,
+                 default_options_set: DefaultOptionSet | None = None):
         super().__init__()
         if parameters is None:
             parameters = {}
         else:
             # Convert nested dicts
             parameters = flatten_parameters(parameters)
+
+        # If no prefix is provided generate a default prefix
+        # and ignore any command line options
         if options_prefix is None:
             default_prefix = default_prefix or "petsctools_"
-            if not default_prefix.endswith("_"):
-                default_prefix += "_"
+            default_prefix = _validate_prefix(default_prefix)
             self.options_prefix = f"{default_prefix}{next(self.count)}_"
             self.parameters = parameters
             self.to_delete = set(parameters)
+
         else:
-            if options_prefix and not options_prefix.endswith("_"):
-                options_prefix += "_"
+            options_prefix = _validate_prefix(options_prefix)
             self.options_prefix = options_prefix
-            # Remove those options from the dict that were passed on
-            # the commandline.
+
+            # Are we part of a solver set sharing defaults?
+            if default_options_set:
+                if options_prefix not in default_options_set.custom_prefixes:
+                    raise ValueError(
+                        f"The options_prefix {options_prefix} must be one"
+                        f" of the custom_prefixes of the DefaultOptionSet"
+                        f" {default_options_set.custom_prefixes}")
+                default_options = get_default_options(
+                    default_options_set, self.options_object)
+            else:
+                default_options = {}
+
+            # Note: we need to know which parameters to_delete
+            # so we need to exclude the relevant command line
+            # options when combining the parameters from the
+            # defaults and the source code.
+
+            # Start building parameters from the defaults so
+            # that they will overwritten by any other source.
             self.parameters = {
+                k: v
+                for k, v in default_options.items()
+                if options_prefix + k not in get_commandline_options()
+            }
+
+            # Update using the parameters passed in the code but
+            # exclude those options from the dict that were passed
+            # on the commandline.
+            self.parameters.update({
                 k: v
                 for k, v in parameters.items()
                 if options_prefix + k not in get_commandline_options()
-            }
+            })
             self.to_delete = set(self.parameters)
+
             # Now update parameters from options, so that they're
             # available to solver setup (for, e.g., matrix-free).
             # Can't ask for the prefixed guy in the options object,
@@ -281,6 +458,7 @@ class OptionsManager:
             for k, v in self.options_object.getAll().items():
                 if k.startswith(self.options_prefix):
                     self.parameters[k[len(self.options_prefix):]] = v
+
         self._setfromoptions = False
         # Keep track of options used between invocations of inserted_options().
         self._used_options = set()
@@ -373,7 +551,8 @@ def attach_options(
     obj: petsc4py.PETSc.Object,
     parameters: dict | None = None,
     options_prefix: str | None = None,
-    default_prefix: str | None = None
+    default_prefix: str | None = None,
+    default_options_set: DefaultOptionSet | None = None
 ) -> None:
     """Set up an OptionsManager and attach it to a PETSc Object.
 
@@ -387,10 +566,14 @@ def attach_options(
         The options prefix to use for this object.
     default_prefix
         Base string for autogenerated default prefixes.
+    default_options_set
+        The prefix set for any default shared with other solvers.
 
     See Also
     --------
     OptionsManager
+    set_from_options
+    DefaultOptionSet
     """
     if has_options(obj):
         raise PetscToolsException(
@@ -402,6 +585,7 @@ def attach_options(
         parameters=parameters,
         options_prefix=options_prefix,
         default_prefix=default_prefix,
+        default_options_set=default_options_set
     )
     obj.setAttr("options", options)
 
@@ -487,6 +671,7 @@ def set_from_options(
     parameters: dict | None = None,
     options_prefix: str | None = None,
     default_prefix: str | None = None,
+    default_options_set: DefaultOptionSet | None = None
 ) -> None:
     """Set up a PETSc object from the options in its OptionsManager.
 
@@ -510,6 +695,8 @@ def set_from_options(
         The options prefix to use for this object.
     default_prefix
         Base string for autogenerated default prefixes.
+    default_options_set
+        The prefix set for any default shared with other solvers.
 
     Raises
     ------
@@ -526,6 +713,8 @@ def set_from_options(
     --------
     OptionsManager
     OptionsManager.set_from_options
+    attach_options
+    DefaultOptionSet
     """
     if has_options(obj):
         if parameters is not None or options_prefix is not None:
@@ -545,6 +734,7 @@ def set_from_options(
             obj, parameters=parameters,
             options_prefix=options_prefix,
             default_prefix=default_prefix,
+            default_options_set=default_options_set
         )
 
     if is_set_from_options(obj):
@@ -603,80 +793,3 @@ def inserted_options(obj):
     """
     with get_options(obj).inserted_options():
         yield
-
-
-def get_default_options(base_prefix: str, custom_prefix_endings: str,
-                        options: petsc4py.PETSc.Options | None = None) -> dict:
-    """
-    Extract default options for subsolvers with similar prefixes.
-
-    Some solvers, e.g. PCFieldsplit, create multiple subsolvers whose prefixes
-    differ only by the final characters, e.g. 'fieldsplit_0', 'fieldsplit_1'.
-    It is often useful to be able to set default options for these subsolvers
-    using the un-specialised prefix e.g. 'fieldsplit_ksp_type'. However, just
-    grabbing all options with the 'fieldsplit' prefix will erroneously find
-    options like '0_ksp_type' and '1_ksp_type' that were meant for a specific
-    subsolver.
-
-    Given a base prefix (e.g. 'fieldsplit') and a set of custom prefix endings
-    (e.g.  '0', '1'), this function will return a dictionary of all options
-    with the base prefix except those which start with the base prefix and one
-    of the custom endings.
-
-    For example, to set up a fieldsplit solver you might have the following
-    options, where both fields are to use ILU as the preconditioner.
-
-    .. code-block:: python3
-
-       -fieldsplit_pc_type ilu
-       -fieldsplit_0_ksp_type preonly
-       -fieldsplit_1_ksp_type richardson
-
-    To get a dictionary with just the default option ({'pc_type': 'ilu'}) you
-    would call:
-
-    .. code-block:: python3
-
-       defaults = get_default_options(base_prefix='fieldsplit',
-                                      custom_prefix_endings=('0', '1'))
-
-    Parameters
-    ----------
-    base_prefix :
-        The prefix for the default options, which must be the beginning of
-        each full custom prefix. If this does not end in an underscore then
-        one will be added.
-    custom_prefix_endings :
-        The ends of each individual custom prefix. Usually a range of integers.
-        Each one will be converted to a string and have an underscore appended
-        if it does not already have one.
-    options :
-        The PETSc.Options database to use. If not provided then the global
-        database will be used.
-
-    Returns
-    -------
-        The dictionary of default options with the base prefix stripped.
-    """
-    if options is None:
-        from petsc4py import PETSc
-        options = PETSc.Options()
-
-    if not base_prefix.endswith("_"):
-        base_prefix += "_"
-    custom_prefixes = [base_prefix + str(ending)
-                       for ending in custom_prefix_endings]
-    for prefix in custom_prefixes:
-        if not prefix.endswith("_"):
-            prefix += "_"
-
-    default_options = {
-        k.removeprefix(base_prefix): v
-        for k, v in options.getAll().items()
-        if (k.startswith(base_prefix)
-            and not any(k.startswith(prefix) for prefix in custom_prefixes))
-    }
-    assert not any(k.startswith(str(end))
-                   for k in default_options.keys()
-                   for end in custom_prefix_endings)
-    return default_options

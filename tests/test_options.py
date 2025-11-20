@@ -117,20 +117,26 @@ def test_default_options():
         options[k] = v
 
     # default_options = {"opt1": 1, "opt2": 2, "opt3": 3}
-    default_options = petsctools.get_default_options(
+    default_option_set = petsctools.DefaultOptionSet(
         base_prefix="base", custom_prefix_endings=("0", "1", "2"))
 
-    assert len(default_options) == 3
-    assert default_options["opt1"] == "1"
-    assert default_options["opt2"] == "2"
-    assert default_options["opt3"] == "3"
-
+    # test default is overriden by command line
     options0 = petsctools.OptionsManager(
-        parameters=default_options, options_prefix="base_0")
+        parameters={},
+        options_prefix="base_0",
+        default_options_set=default_option_set)
+
+    # test defaults is overriden by command line and source-code
     options1 = petsctools.OptionsManager(
-        parameters=default_options, options_prefix="base_1")
+        parameters={"opt2": "7"},
+        options_prefix="base_1",
+        default_options_set=default_option_set)
+
+    # test both defaults and non-defaults are picked up
     options2 = petsctools.OptionsManager(
-        parameters=default_options, options_prefix="base_2")
+        parameters={},
+        options_prefix="base_2",
+        default_options_set=default_option_set)
 
     assert len(options0.parameters) == 3
     assert options0.parameters["opt1"] == "1"
@@ -139,7 +145,7 @@ def test_default_options():
 
     assert len(options1.parameters) == 3
     assert options1.parameters["opt1"] == "1"
-    assert options1.parameters["opt2"] == "2"
+    assert options1.parameters["opt2"] == "7"
     assert options1.parameters["opt3"] == "5"
 
     assert len(options2.parameters) == 4
