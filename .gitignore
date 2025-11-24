@@ -1,7 +1,12 @@
 petsctools/config.ini
 
-*/__pycache__
+**/__pycache__
 *.egg-info
 
 docs/build
 docs/source/generated
+
+docs/source/_static/cython-demo/build
+docs/source/_static/cython-demo/*.c
+docs/source/_static/cython-demo/*.so
+docs/source/_static/cython-demo/*.html
