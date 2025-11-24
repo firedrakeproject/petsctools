@@ -1,4 +1,7 @@
 """This file basically exposes the PETSc API as a module for use in Cython."""
+
+# IMPORTANT: This file cannot be accessed if petsctools is installed in editable mode.
+
 from petsc4py cimport PETSc as _PETSc
 
 # clearer aliases from petsc4py, so the names here match the C API
