@@ -48,9 +48,10 @@ cdef extern from "petsc.h":
 
     # PetscSF
     ctypedef struct PetscSFNode:
-        pass
+        PetscInt rank
+        PetscInt index
 
-    PetscErrorCode PetscSFGetGraph(PetscSF,PetscInt*,PetscInt*,PetscInt**,PetscSFNode**)
+    PetscErrorCode PetscSFGetGraph(PetscSF,PetscInt*,PetscInt*,const PetscInt**,const PetscSFNode**)
     PetscErrorCode PetscSFSetGraph(PetscSF,PetscInt,PetscInt,PetscInt*,PetscCopyMode,PetscSFNode*,PetscCopyMode)
 
     # PetscSection
