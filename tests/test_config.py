@@ -20,6 +20,21 @@ def test_get_config():
     )
 
 
+def test_get_petsc_dirs():
+    petsc_dir = petsctools.get_petsc_dir()
+    petsc_arch = petsctools.get_petsc_arch()
+
+    expected = (petsc_dir, f"{petsc_dir}/{petsc_arch}") 
+    assert petsctools.get_petsc_dirs() == expected
+
+    expected = (
+        f"PREFIX{petsc_dir}/SUBDIR", f"PREFIX{petsc_dir}/{petsc_arch}/SUBDIR"
+    )
+    assert (
+        petsctools.get_petsc_dirs(prefix="PREFIX", subdir="SUBDIR") == expected
+    )
+
+
 def test_get_petscvariables():
     petsctools.get_petscvariables()
 
