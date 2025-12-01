@@ -3,6 +3,7 @@ from .config import (  # noqa: F401
     get_config,
     get_petsc_dir,
     get_petsc_arch,
+    get_petsc_dirs,
     get_petscvariables,
     get_petscconf_h,
     get_external_packages,
