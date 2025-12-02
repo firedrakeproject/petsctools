@@ -41,6 +41,9 @@ ci = [
   {include-group = "test"},
 ]
 
+[tool.setuptools.package-data]
+petsctools = ["__init__.pxd", "cpetsc.pxd"]
+
 [tool.ruff]
 line-length = 79
 
