@@ -36,6 +36,47 @@ def get_petsc_arch():
     return get_config()["PETSC_ARCH"]
 
 
+def get_petsc_dirs(
+    *,
+    prefix: str = "",
+    subdir: str | None = None,
+) -> tuple[str, str]:
+    """Return $PETSC_DIR and $PETSC_DIR/$PETSC_ARCH.
+
+    This function is useful for generating compiler arguments. For example
+
+    .. code-block:: python
+
+        get_petsc_dirs(subdir="include", prefix="-I")
+
+    will return
+
+    .. code-block:: python
+
+        ("-I/path/to/petsc/include", "-I/path/to/petsc/mypetscarch/include")
+
+    Parameters
+    ----------
+    prefix :
+        Optional prefix to prepend to the paths.
+    subdir :
+        Optional subdirectory to include in the returned paths.
+
+    Returns
+    -------
+    tuple :
+        ``$PETSC_DIR`` and ``$PETSC_DIR/$PETSC_ARCH`` with appropriate
+        sub-directories and prefixes.
+
+    """
+    dirs = []
+    for path in [[get_petsc_dir()], [get_petsc_dir(), get_petsc_arch()]]:
+        if subdir:
+            path.append(subdir)
+        dirs.append(f"{prefix}{os.path.join(*path)}")
+    return tuple(dirs)
+
+
 @functools.lru_cache()
 def get_petscvariables():
     """Return PETSc's configuration information."""
