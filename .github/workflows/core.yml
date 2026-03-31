@@ -51,6 +51,8 @@ jobs:
     env:
       PETSC_DIR: ${{ github.workspace }}/petsc
       PETSC_ARCH: arch-default
+      # Speed up compilation
+      CFLAGS: -O0
     outputs:
       docs_conclusion: ${{ steps.report_docs.outputs.conclusion }}
     steps:
