@@ -8,4 +8,5 @@ petsctools provides Pythonic extensions for petsc4py and slepc4py.
    :maxdepth: 2
 
    examples
+   cython
    generated/modules

@@ -1,4 +1,4 @@
-"""This file basically exposes the PETSc API as a module for use in Cython."""
+"""This file exposes the PETSc API as a module for use in Cython."""
 
 # IMPORTANT: This file cannot be accessed if petsctools is installed in editable mode.
 
