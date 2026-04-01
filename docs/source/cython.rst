@@ -9,11 +9,8 @@ the petsc4py Python bindings. For example:
 * The desired API functionality is not available in petsc4py.
 
 To support this, petsctools makes some of PETSc's C API available to use
-through Cython. It does this in a similar way to petsc4py but emphasises
-readability and faithfulness to the API. Anyone should be able to add
-additional bindings to the
-`definitions file <https://github.com/firedrakeproject/petsctools/blob/main/petsctools/cpetsc.pxd>`_
-without trouble.
+through `Cython <https://cython.org/>`_. It does this in a similar way
+to petsc4py but emphasises readability and faithfulness to the API.
 
 Demo
 ~~~~
@@ -54,7 +51,7 @@ extension provided above looks like:
 
 This file should be added to your project along with a suitable
 ``pyproject.toml`` that indicates ``setuptools`` as the
-``build-backend``. ``setuptools``, ``cython``, ``petsc4py`` and
+``build-backend``. ``setuptools``, ``cython`` and
 ``petsctools`` are all necessary build-time dependencies.
 
 Conventions used
@@ -74,3 +71,16 @@ Conventions used
    * ``cpetsc.Vec_py.vec``  ⟷  ``cpetsc.Vec``
    * ``cpetsc.IS_py.iset``  ⟷  ``cpetsc.IS``
    * ``cpetsc.PetscSection_py.sec``  ⟷  ``cpetsc.PetscSection``
+
+  For more information you will have to refer to the `petsc4py
+  source code <https://gitlab.com/petsc/petsc/-/blob/main/src/binding/petsc4py/src/petsc4py/PETSc.pxd>`__.
+
+Adding more functions
+~~~~~~~~~~~~~~~~~~~~~
+
+Adding additional PETSc functions to petsctools is straightforward. You simply
+have to add the bindings to the
+`definitions file <https://github.com/firedrakeproject/petsctools/blob/main/petsctools/cpetsc.pxd>`__
+in a declarative way, just as you would write any other C file. For more
+information please refer to the `Cython documentation
+<https://cython.readthedocs.io/en/latest/src/tutorial/pxd_files.html>`__.

@@ -21,7 +21,7 @@ def medium():
 
 def fast():
     N: cython.int = int(1e8)
-    section: cpetsc.PetscSection_py = PETSc.Section().create()
+    section: PETSc.Section = PETSc.Section().create()
     section.setChart(0, N)
 
     start = time.time()

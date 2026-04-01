@@ -11,7 +11,6 @@ extension = Extension(
     library_dirs=petsctools.get_petsc_dirs(subdir="lib"),
     runtime_library_dirs=petsctools.get_petsc_dirs(subdir="lib"),
     libraries=["petsc"],
-    annotate=True,
 )
 
 setup(ext_modules=[extension])
