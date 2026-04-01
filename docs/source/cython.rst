@@ -51,8 +51,21 @@ extension provided above looks like:
 
 This file should be added to your project along with a suitable
 ``pyproject.toml`` that indicates ``setuptools`` as the
-``build-backend``. ``setuptools``, ``cython`` and
+``build-backend``. ``setuptools``, ``cython``, ``petsc4py`` and
 ``petsctools`` are all necessary build-time dependencies.
+
+.. note::
+   If you encounter errors like::
+
+      /.../petsc/include/petscsys.h:124:12: fatal error: mpi.h: No such file or directory
+        124 |   #include <mpi.h>
+            |            ^~~~~~~
+      compilation terminated.
+      error: command '/usr/bin/x86_64-linux-gnu-gcc' failed with exit code 1
+
+   then this usually means that setuptools cannot find your MPI distribution.
+   To fix this simply set the environment variable ``CC=mpicc`` and
+   try again.
 
 Conventions used
 ~~~~~~~~~~~~~~~~

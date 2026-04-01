@@ -23,7 +23,6 @@ classifiers = [
 [project.optional-dependencies]
 petsc4py = ["petsc4py"]
 slepc4py = ["slepc4py"]
-cython = ["cython"]
 
 [project.urls]
 Repository = "https://github.com/firedrakeproject/petsctools"
@@ -40,6 +39,8 @@ ci = [
   {include-group = "docs"},
   {include-group = "lint"},
   {include-group = "test"},
+  "cython",
+  "setuptools",
 ]
 
 [tool.setuptools.package-data]

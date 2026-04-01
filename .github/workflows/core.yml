@@ -88,7 +88,7 @@ jobs:
           : # upgrade pip since dependency groups were only introduced in pip 25.1
           pip install -U pip
 
-          pip install --verbose ./petsctools-repo[cython]
+          pip install --verbose ./petsctools-repo
           pip install --group ./petsctools-repo/pyproject.toml:ci
           pip list
 
@@ -135,7 +135,7 @@ jobs:
         run: |
           . venv-petsctools/bin/activate
           cd petsctools-repo/docs/source/_static/cython_demo
-          python setup.py build_ext --inplace
+          CC=mpicc python setup.py build_ext --inplace
           python -c "import slow"
           python -c "import fast"
 
