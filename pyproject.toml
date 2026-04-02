@@ -39,7 +39,12 @@ ci = [
   {include-group = "docs"},
   {include-group = "lint"},
   {include-group = "test"},
+  "cython",
+  "setuptools",
 ]
+
+[tool.setuptools.package-data]
+petsctools = ["__init__.pxd", "cpetsc.pxd"]
 
 [tool.ruff]
 line-length = 79

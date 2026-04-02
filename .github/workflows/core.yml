@@ -132,6 +132,15 @@ jobs:
           . venv-petsctools/bin/activate
           pytest petsctools-repo
 
+      - name: Run Cython demo
+        if: success() || steps.install-petsc4py.conclusion == 'success'
+        run: |
+          . venv-petsctools/bin/activate
+          cd petsctools-repo/docs/source/_static/cython_demo
+          CC=mpicc python setup.py build_ext --inplace
+          python -c "import slow"
+          python -c "import fast"
+
       - name: Build documentation
         id: build_docs
         if: success() || steps.install.conclusion == 'success'
