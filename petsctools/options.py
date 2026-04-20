@@ -123,9 +123,9 @@ def _warn_unused_options(all_options: Iterable, used_options: Iterable,
     """
     unused_options = set(all_options) - set(used_options)
 
-    for option in sorted(unused_options):
+    for option, value in sorted(unused_options, key=lambda kv: kv[0]):
         warnings.warn(
-            f"Unused PETSc option: {options_prefix+option}",
+            f"Unused PETSc option: {options_prefix+option}: {value}",
             PetscToolsWarning
         )
 
@@ -478,7 +478,8 @@ class OptionsManager:
         with self.inserted_options():
             if self.options_object.getBool("options_left", False):
                 weakref.finalize(self, _warn_unused_options,
-                                 self.to_delete, self._used_options,
+                                 set(self.parameters.items()),
+                                 self._used_options,
                                  options_prefix=self.options_prefix)
 
     def set_default_parameter(self, key: str, val: Any) -> None:
@@ -533,7 +534,9 @@ class OptionsManager:
         finally:
             for k in self.to_delete:
                 if self.options_object.used(self.options_prefix + k):
-                    self._used_options.add(k)
+                    # this is safe because we know k has already been touched
+                    v = self.options_object[self.options_prefix + k]
+                    self._used_options.add((k, v))
                 del self.options_object[self.options_prefix + k]
 
     @functools.cached_property
