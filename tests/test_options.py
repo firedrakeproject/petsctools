@@ -46,7 +46,7 @@ def test_unused_options(options_left):
 
     parameters = {
         "used": 1,
-        "not_used": 2,
+        "not_used": "xyz",
     }
     options = petsctools.OptionsManager(parameters, options_prefix="optobj")
 
@@ -74,6 +74,9 @@ def test_unused_options(options_left):
     # Do we only raise a warning for the unused option?
     assert "optobj_not_used" in message
     assert "optobj_used" not in message
+
+    # Do we show the value of the unused option?
+    assert "xyz" in message
 
 
 @pytest.mark.skipnopetsc4py
