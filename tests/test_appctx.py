@@ -1,5 +1,4 @@
 import pytest
-from numpy import allclose
 import petsctools
 from petsctools.exceptions import PetscToolsAppctxException
 
@@ -52,7 +51,7 @@ def test_get_appctx():
     with petsctools.inserted_options(ksp), petsctools.push_appctx(appctx):
         ksp.solve(b, x)
 
-    assert allclose(x.array_r, xcheck.array_r)
+    assert (x - xcheck).norm() < 1e-14
 
 
 @pytest.mark.skipnopetsc4py
