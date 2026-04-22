@@ -1,0 +1,181 @@
+on:
+  workflow_call:
+    inputs:
+      source_ref:
+        description: The input Git ref to checkout
+        type: string
+        required: true
+      target_branch:
+        description: The target branch
+        type: string
+        required: true
+      run_tests:
+        description: Whether to run the test suite
+        type: boolean
+        default: true
+      deploy_website:
+        description: Whether to deploy the website
+        type: boolean
+        default: false
+
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: The input Git ref to checkout
+        type: string
+        required: true
+      target_branch:
+        description: The target branch
+        type: string
+        required: true
+      run_tests:
+        description: Whether to run the test suite
+        type: boolean
+        default: true
+      deploy_website:
+        description: Whether to deploy the website
+        type: boolean
+        default: false
+
+concurrency:
+  # Cancel running jobs if new commits are pushed
+  group: >
+    ${{ github.workflow }}-
+    ${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test petsctools
+    runs-on: ubuntu-latest
+    env:
+      PETSC_DIR: ${{ github.workspace }}/petsc
+      PETSC_ARCH: arch-default
+      # Speed up compilation
+      CFLAGS: -O0
+    outputs:
+      docs_conclusion: ${{ steps.report_docs.outputs.conclusion }}
+    steps:
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install \
+            build-essential \
+            libopenblas-dev \
+            libopenmpi-dev \
+            python3-venv
+
+      - name: Install PETSc
+        run: |
+          git clone https://gitlab.com/petsc/petsc.git --branch release
+          cd petsc
+          ./configure
+          make
+
+      - name: Checkout petsctools
+        uses: actions/checkout@v4
+        with:
+          # Download petsctools into a subdirectory not called 'petsctools' to
+          # make sure that the package installs correctly. Otherwise
+          # 'import petsctools' could work even if the installation failed
+          # because it is a subdirectory.
+          path: petsctools-repo
+
+      - name: Install petsctools
+        id: install
+        run: |
+          python3 -m venv --system-site-packages venv-petsctools
+          . venv-petsctools/bin/activate
+
+          : # upgrade pip since dependency groups were only introduced in pip 25.1
+          pip install -U pip
+
+          pip install --verbose ./petsctools-repo
+          pip install --group ./petsctools-repo/pyproject.toml:ci
+          pip list
+
+      - name: Lint codebase
+        run: |
+          . venv-petsctools/bin/activate
+          ruff check petsctools-repo
+
+      - name: Run tests without petsc4py
+        if: success() || steps.install.conclusion == 'success'
+        run: |
+          . venv-petsctools/bin/activate
+          pytest petsctools-repo
+
+      - name: Install petsc4py
+        id: install-petsc4py
+        if: success() || steps.install.conclusion == 'success'
+        run: |
+          . venv-petsctools/bin/activate
+          pip install --verbose $PETSC_DIR/src/binding/petsc4py
+
+      # Make sure that running 'import petsctools' does not initialise PETSc
+      # (e.g. by running 'from petsc4py import PETSc'). Otherwise 'petsctools.init'
+      # does nothing. We check this by passing a PETSc option on the command line
+      # and making sure that it is processed.
+      - name: Test lazy PETSc initialisation
+        if: success() || steps.install-petsc4py.conclusion == 'success'
+        run: |
+          . venv-petsctools/bin/activate
+          if [ -z "$( python -c 'import petsctools; petsctools.init()' -log_view | grep 'PETSc Performance Summary' )" ]; then
+            exit 1
+          else
+            exit 0
+          fi
+
+      - name: Run tests with petsc4py
+        if: success() || steps.install-petsc4py.conclusion == 'success'
+        run: |
+          . venv-petsctools/bin/activate
+          pytest petsctools-repo
+
+      - name: Run Cython demo
+        if: success() || steps.install-petsc4py.conclusion == 'success'
+        run: |
+          . venv-petsctools/bin/activate
+          cd petsctools-repo/docs/source/_static/cython_demo
+          CC=mpicc python setup.py build_ext --inplace
+          python -c "import slow"
+          python -c "import fast"
+
+      - name: Build documentation
+        id: build_docs
+        if: success() || steps.install.conclusion == 'success'
+        run: |
+          . venv-petsctools/bin/activate
+          make -C petsctools-repo/docs html
+
+      - name: Upload documentation
+        id: upload_docs
+        uses: actions/upload-pages-artifact@v3
+        if: success() || steps.build_docs.conclusion == 'success'
+        with:
+          name: github-pages
+          path: petsctools-repo/docs/build/html
+          retention-days: 1
+
+      - name: Report docs build status
+        id: report_docs
+        if: success() || steps.upload_docs.conclusion == 'success'
+        run: echo "conclusion=success" >> "$GITHUB_OUTPUT"
+
+  deploy_website:
+    name: Deploy website (optional)
+    needs: test
+    if: |
+      always() &&
+      inputs.deploy_website &&
+      needs.test.outputs.docs_conclusion == 'success'
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
+

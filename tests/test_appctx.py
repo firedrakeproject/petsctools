@@ -1,4 +1,5 @@
 import pytest
+from numpy import allclose
 import petsctools
 from petsctools.exceptions import PetscToolsAppctxException
 
@@ -16,7 +17,6 @@ class JacobiTestPC:
 
 @pytest.mark.skipnopetsc4py
 def test_get_appctx():
-    from numpy import allclose
     PETSc = petsctools.init()
     n = 4
     sizes = (n, n)
