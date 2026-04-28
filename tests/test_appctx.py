@@ -5,6 +5,7 @@ from petsctools.exceptions import PetscToolsAppctxException
 
 class JacobiTestPC:
     prefix = "jacobi_"
+
     def setFromOptions(self, pc):
         appctx = petsctools.get_appctx()
         prefix = (pc.getOptionsPrefix() or "") + self.prefix
@@ -48,7 +49,7 @@ def test_get_appctx():
     xcheck = x.duplicate()
     xcheck.pointwiseMult(b, diag)
 
-    with petsctools.inserted_options(ksp), petsctools.push_appctx(appctx):
+    with petsctools.inserted_options(ksp):
         ksp.solve(b, x)
 
     assert (x - xcheck).norm() < 1e-14

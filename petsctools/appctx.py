@@ -5,14 +5,24 @@ from petsctools.exceptions import PetscToolsAppctxException
 
 _global_appctx_stack = []
 
+
 @contextmanager
-def push_appctx(appctx):
+def push_appctx(appctx: "AppContext"):
+    """
+    Context manager for pushing an :class:`AppContext` onto the global stack.
+
+    The ``appctx`` will then be available via :func:`get_appctx`.
+    At the end of the context manager the ``appctx`` will be popped
+    from the global stack.
+    """
     _global_appctx_stack.append(appctx)
     yield
     _global_appctx_stack.pop()
 
 
 def get_appctx():
+    """Return the :class:`AppContext` at the top of the global stack.
+    """
     return _global_appctx_stack[-1]
 
 
