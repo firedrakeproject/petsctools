@@ -8,13 +8,20 @@ _global_appctx_data = {}
 """The global storage for user data with arbitrary python types."""
 
 
-class AppContextKey(int):
+class AppContextKey(str):
     """A custom key type for AppContext."""
+
+    _count = itertools.count()
+
+    @classmethod
+    def _generate_key(cls):
+        return f"petsctools_appctx_key_{next(cls._count)}"
 
 
 class AppContext:
     def __init__(self, prefix: str | None = None):
         from petsctools.options import _validate_prefix
+
         # possibly append underscore or cast to str
         self._prefix = _validate_prefix(prefix or "")
 
@@ -26,6 +33,7 @@ class AppContext:
     def options_object(self):
         """A PETSc.Options instance."""
         from petsc4py import PETSc
+
         return PETSc.Options()
 
     def _key_from_option(self, option: str) -> AppContextKey:
@@ -42,7 +50,9 @@ class AppContext:
         key
             An internal key corresponding to ``option``.
         """
-        return AppContextKey(self.options_object.getInt(self.prefix + option))
+        return AppContextKey(
+            self.options_object.getString(self.prefix + option)
+        )
 
     def __getitem__(self, option: str | AppContextKey, /) -> Any:
         """
@@ -67,15 +77,17 @@ class AppContext:
             return _global_appctx_data[self._key_from_option(option)]
         except KeyError:
             raise PetscToolsAppctxException(
-                f"AppContext does not have an entry for {option}")
+                f"AppContext does not have an entry for {option}"
+            )
 
     def __setitem__(self, option: str, value: Any, /):
-        key = AppContextManager._keygen()
+        key = AppContextKey._generate_key()
         self.options_object[self.prefix + option] = key
         _global_appctx_data[key] = value
 
-    def get(self, option: str | AppContextKey,
-            default: Any | None = None) -> Any:
+    def get(
+        self, option: str | AppContextKey, default: Any | None = None
+    ) -> Any:
         """
         Return the value with the key saved in ``PETSc.Options()[option]``,
         or if it does not exist return default.
@@ -139,19 +151,9 @@ class AppContextManager:
             default = MyCustomData(10)
             data = appctx.get('solver_custompc_somedata', default)
     """
-    _count = itertools.count()
 
     def __init__(self):
         self._data = {}
-
-    @classmethod
-    def _keygen(self) -> AppContextKey:
-        """
-        Generate a new unique internal key.
-
-        This should not called directly by the user.
-        """
-        return AppContextKey(next(self._count))
 
     def add(self, val: Any) -> AppContextKey:
         """
@@ -171,7 +173,7 @@ class AppContextManager:
         key
             The key to put into the PETSc Options dictionary.
         """
-        key = self._keygen()
+        key = AppContextKey._generate_key()
         self._data[key] = val
         return key
 
