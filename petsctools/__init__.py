@@ -1,8 +1,3 @@
-from .appctx import (  # noqa: F401
-    AppContext,
-    push_appctx,
-    get_appctx,
-)
 from .config import (  # noqa: F401
     MissingPetscException,
     get_config,
@@ -20,6 +15,10 @@ from .utils import PETSC4PY_INSTALLED
 # is not available then attempting to access these attributes will raise an
 # informative error.
 if PETSC4PY_INSTALLED:
+    from .appctx import (  # noqa: F401
+        AppContext,
+        AppContextManager,
+    )
     from .citation import (  # noqa: F401
         add_citation,
         cite,
@@ -70,6 +69,8 @@ else:
             "set_default_parameter",
             "DefaultOptionSet",
             "PCBase",
+            "AppContext",
+            "AppContextManager",
         }
         if name in petsc4py_attrs:
             raise ImportError(

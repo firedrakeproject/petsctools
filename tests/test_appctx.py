@@ -7,21 +7,29 @@ class JacobiTestPC:
     prefix = "jacobi_"
 
     def setFromOptions(self, pc):
-        appctx = petsctools.get_appctx()
+        from petsc4py import PETSc
         prefix = (pc.getOptionsPrefix() or "") + self.prefix
-        self.scale = appctx[prefix + "scale"]
+
+        prefixed_appctx = PETSc.Options().getBool(
+            prefix + "prefixed_appctx")
+
+        if prefixed_appctx:
+            appctx = petsctools.AppContext(prefix)
+            self.scale = appctx["scale"]
+        else:
+            appctx = petsctools.AppContext()
+            self.scale = appctx[prefix + "scale"]
 
     def apply(self, pc, x, y):
         y.pointwiseMult(x, self.scale)
 
 
 @pytest.mark.skipnopetsc4py
-def test_get_appctx():
+@pytest.mark.parametrize("use_prefix", ["with_prefix", "without_prefix"])
+def test_appctx_context_manager(use_prefix):
     PETSc = petsctools.init()
     n = 4
     sizes = (n, n)
-
-    appctx = petsctools.AppContext()
 
     diag = PETSc.Vec().createSeq(sizes)
     diag.setSizes((n, n))
@@ -31,13 +39,17 @@ def test_get_appctx():
 
     ksp = PETSc.KSP().create()
     ksp.setOperators(mat, mat)
+
+    appctx = petsctools.AppContextManager()
+
     petsctools.set_from_options(
         ksp,
         parameters={
             'ksp_type': 'preonly',
             'pc_type': 'python',
             'pc_python_type': f'{__name__}.JacobiTestPC',
-            'jacobi_scale': appctx.add(diag)
+            'jacobi_scale': appctx.add(diag),
+            'jacobi_prefixed_appctx': use_prefix == "with_prefix",
         },
         options_prefix="myksp",
         appctx=appctx,
@@ -59,24 +71,55 @@ def test_get_appctx():
 def test_appctx_key():
     PETSc = petsctools.init()
 
+    manager = petsctools.AppContextManager()
+
+    prefix0_param = 10
+    options = PETSc.Options()
+    options['prefix0_param'] = manager.add(prefix0_param)
+
     appctx = petsctools.AppContext()
 
-    param = 10
-    options = PETSc.Options()
-    options['solver_param'] = appctx.add(param)
-
-    # Can we access param via the prefixed option?
-    prm = appctx.get('solver_param')
-    assert prm is param
-
-    prm = appctx['solver_param']
-    assert prm is param
-
-    # Can we set a default value?
-    default = 20
-    prm = appctx.get('param', default)
-    assert prm is default
-
-    # Will an invalid key raise an error
+    # The param shouldn't be in the global dictionary yet
     with pytest.raises(PetscToolsAppctxException):
         appctx['param']
+
+    # Can we access param via the prefixed option?
+    with manager.inserted_appctx():
+        prm = appctx.get('prefix0_param')
+        assert prm is prefix0_param
+
+        prm = appctx['prefix0_param']
+        assert prm is prefix0_param
+
+        # Can we set a default value?
+        default = 20
+        prm = appctx.get('param', default)
+        assert prm is default
+
+        # Will an invalid key raise an error
+        with pytest.raises(PetscToolsAppctxException):
+            appctx['param']
+
+    # Now try with a prefixed AppContext
+
+    # First add a param option with a different prefix
+    prefix1_param = 20
+    options['prefix1_param'] = manager.add(prefix1_param)
+
+    appctx0 = petsctools.AppContext('prefix0')
+    appctx1 = petsctools.AppContext('prefix1')
+
+    with manager.inserted_appctx():
+        # This should only see prefix0 entries
+        prm = appctx0.get('param')
+        assert prm is prefix0_param
+
+        prm = appctx0['param']
+        assert prm is prefix0_param
+
+        # This should only see prefix1 entries
+        prm = appctx1.get('param')
+        assert prm is prefix1_param
+
+        prm = appctx1['param']
+        assert prm is prefix1_param

@@ -15,7 +15,7 @@ from petsctools.exceptions import (
     PetscToolsWarning,
     PetscToolsNotInitialisedException,
 )
-from petsctools.appctx import push_appctx, AppContext
+from petsctools.appctx import AppContextManager
 
 
 _commandline_options = None
@@ -390,7 +390,7 @@ class OptionsManager:
         The prefix set for any default shared with other solvers.
         See :class:`DefaultOptionSet` for more information.
     appctx
-        The :class:`AppContext` containing user python data.
+        The :class:`AppContextManager` containing user python data.
 
     See Also
     --------
@@ -402,6 +402,7 @@ class OptionsManager:
     inserted_options
     DefaultOptionSet
     AppContext
+    AppContextManager
     """
 
     count = itertools.count()
@@ -410,7 +411,7 @@ class OptionsManager:
                  options_prefix: str | None = None,
                  default_prefix: str | None = None,
                  default_options_set: DefaultOptionSet | None = None,
-                 appctx: AppContext | None = None):
+                 appctx: AppContextManager | None = None):
         super().__init__()
         if parameters is None:
             parameters = {}
@@ -515,7 +516,7 @@ class OptionsManager:
         Before calling ``petsc_obj.setFromOptions``, the options from
         this OptionsManager's ``parameters`` are inserted into the global
         :class:`PETSc.Options`, and if this OptionsManager has an ``appctx``
-        then it is pushed onto the global :class:`AppContext` stack.
+        then all entries are inserted into the :class:`AppContext`.
 
         Parameters
         ----------
@@ -546,14 +547,14 @@ class OptionsManager:
     def inserted_options(self):
         """Context manager inside which the petsc options database
         contains the parameters from this object.
-        If this OptionsManager has an ``appctx`` then it is pushed
-        onto the global :class:`AppContext` stack.
+        If this OptionsManager has an ``appctx`` then all entries
+        are inserted into the :class:`AppContext`.
         """
         try:
             for k, v in self.parameters.items():
                 self.options_object[self.options_prefix + k] = v
             if self.appctx:
-                with push_appctx(self.appctx):
+                with self.appctx.inserted_appctx():
                     yield
             else:
                 yield
@@ -591,7 +592,7 @@ def attach_options(
     options_prefix: str | None = None,
     default_prefix: str | None = None,
     default_options_set: DefaultOptionSet | None = None,
-    appctx: AppContext | None = None,
+    appctx: AppContextManager | None = None,
 ) -> None:
     """Set up an :class:`OptionsManager` and attach it to a PETSc Object.
 
@@ -608,7 +609,7 @@ def attach_options(
     default_options_set
         The prefix set for any default shared with other solvers.
     appctx
-        The :class:`AppContext` containing user python data.
+        The :class:`AppContextManager` containing user python data.
 
     See Also
     --------
@@ -722,7 +723,7 @@ def set_from_options(
     options_prefix: str | None = None,
     default_prefix: str | None = None,
     default_options_set: DefaultOptionSet | None = None,
-    appctx: AppContext | None = None,
+    appctx: AppContextManager | None = None,
 ) -> None:
     """Set up a PETSc object from the options in its :class:`OptionsManager`.
 
@@ -768,7 +769,7 @@ def set_from_options(
     OptionsManager.set_from_options
     attach_options
     DefaultOptionSet
-    AppContext
+    AppContextManager
     """
     if has_options(obj):
         if parameters is not None or options_prefix is not None:
@@ -833,6 +834,8 @@ def is_set_from_options(obj: petsc4py.PETSc.Object) -> bool:
 def inserted_options(obj):
     """Context manager inside which the PETSc options database
     contains the parameters from this object's :class:`OptionsManager`.
+    If the OptionsManager has an ``appctx`` then all entries are
+    inserted into the :class:`AppContext`.
 
     Parameters
     ----------
