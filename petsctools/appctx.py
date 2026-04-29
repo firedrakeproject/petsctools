@@ -44,7 +44,7 @@ class AppContext:
         """
         return AppContextKey(self.options_object.getInt(self.prefix + option))
 
-    def __getitem__(self, option: str | AppContextKey) -> Any:
+    def __getitem__(self, option: str | AppContextKey, /) -> Any:
         """
         Return the value with the key saved in ``PETSc.Options()[option]``.
 
@@ -68,6 +68,11 @@ class AppContext:
         except KeyError:
             raise PetscToolsAppctxException(
                 f"AppContext does not have an entry for {option}")
+
+    def __setitem__(self, option: str, value: Any, /):
+        key = AppContextManager._keygen()
+        self.options_object[self.prefix + option] = key
+        _global_appctx_data[key] = value
 
     def get(self, option: str | AppContextKey,
             default: Any | None = None) -> Any:
@@ -139,6 +144,7 @@ class AppContextManager:
     def __init__(self):
         self._data = {}
 
+    @classmethod
     def _keygen(self) -> AppContextKey:
         """
         Generate a new unique internal key.
