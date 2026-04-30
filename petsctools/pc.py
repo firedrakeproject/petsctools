@@ -1,5 +1,6 @@
 import abc
 from .exceptions import PetscToolsException
+from .options import _validate_prefix
 
 
 class PCBase(abc.ABC):
@@ -153,3 +154,33 @@ class PCBase(abc.ABC):
         pcname = f"{type(self).__module__}.{type(self).__name__}"
         viewer.printfASCII(
             f"Python type preconditioner {pcname}\n")
+
+
+class AuxiliaryPC(PCBase):
+    prefix = "aux"
+
+    def initialize(self, pc):
+        from petsc4py import PETSc
+        A, P = self.get_mats(pc)
+        ksp = PETSc.KSP().create(comm=pc.comm)
+        ksp.setOperators(A, P or A)
+        ksp.setOptionsPrefix(
+            _validate_prefix((pc.getOptionsPrefix() or "") + self.prefix)
+        )
+        ksp.setFromOptions()
+        self.ksp = ksp
+
+    def update(self, pc):
+        A, P = self.ksp.getOperators()
+        A.assemble()
+        if P is not A:
+            P.assemble()
+
+    def apply(self, pc, x, y):
+        self.ksp.solve(x, y)
+
+    def applyTranspose(self, pc, x, y):
+        self.ksp.solveTranspose(x, y)
+
+    def mats(self, pc):
+        return pc.getOperators()
