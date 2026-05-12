@@ -18,6 +18,7 @@ if PETSC4PY_INSTALLED:
     from .appctx import (  # noqa: F401
         AppContext,
         AppContextManager,
+        PetscToolsAppctxException,
     )
     from .citation import (  # noqa: F401
         add_citation,
@@ -71,6 +72,7 @@ else:
             "PCBase",
             "AppContext",
             "AppContextManager",
+            "PetscToolsAppctxException",
         }
         if name in petsc4py_attrs:
             raise ImportError(
