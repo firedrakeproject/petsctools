@@ -71,6 +71,7 @@ jobs:
           cd petsc
           ./configure
           make
+          make check
 
       - name: Checkout petsctools
         uses: actions/checkout@v4
