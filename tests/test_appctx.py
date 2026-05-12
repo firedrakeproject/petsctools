@@ -10,10 +10,10 @@ class JacobiTestPC:
         from petsc4py import PETSc
         prefix = (pc.getOptionsPrefix() or "") + self.prefix
 
-        prefixed_appctx = PETSc.Options().getBool(
-            prefix + "prefixed_appctx")
+        use_prefixed_appctx = PETSc.Options().getBool(
+            prefix + "use_prefixed_appctx")
 
-        if prefixed_appctx:
+        if use_prefixed_appctx:
             appctx = petsctools.AppContext(prefix)
             self.scale = appctx["scale"]
         else:
@@ -40,7 +40,7 @@ def test_appctx_context_manager(use_prefix):
     ksp = PETSc.KSP().create()
     ksp.setOperators(mat, mat)
 
-    appctx = petsctools.AppContextManager()
+    appmngr = petsctools.AppContextManager()
 
     petsctools.set_from_options(
         ksp,
@@ -48,11 +48,11 @@ def test_appctx_context_manager(use_prefix):
             'ksp_type': 'preonly',
             'pc_type': 'python',
             'pc_python_type': f'{__name__}.JacobiTestPC',
-            'jacobi_scale': appctx.add(diag),
-            'jacobi_prefixed_appctx': use_prefix == "with_prefix",
+            'jacobi_scale': appmngr.add(diag),
+            'jacobi_use_prefixed_appctx': use_prefix == "with_prefix",
         },
         options_prefix="myksp",
-        appctx=appctx,
+        appmngr=appmngr,
     )
 
     x, b = mat.createVecs()

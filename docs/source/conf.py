@@ -19,6 +19,7 @@ master_doc = "index"
 extensions = [
     "sphinx.ext.apidoc",
     "sphinx.ext.napoleon",
+    "sphinx.ext.intersphinx"
 ]
 
 templates_path = ["_templates"]
@@ -32,6 +33,13 @@ html_static_path = ["_static"]
 
 # -- sphinx.ext.apidoc configuration ------------------------------------------
 
-apidoc_modules = [
-    {"path": "../../petsctools", "destination": "generated"},
-]
+apidoc_modules = [{
+    "path": "../../petsctools",
+    "destination": "generated",
+}]
+
+# -- sphinx.ext.intersphinx configuration ------------------------------------------
+
+intersphinx_mapping = {
+    'petsc4py': ('https://petsc.org/release/petsc4py/', None),
+}
