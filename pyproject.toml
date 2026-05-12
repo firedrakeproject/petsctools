@@ -32,9 +32,9 @@ requires = ["setuptools>=77.0.3"]
 build-backend = "setuptools.build_meta"
 
 [dependency-groups]
-docs = ["sphinx"]
+docs = ["sphinx", "numpy"]
 lint = ["ruff"]
-test = ["pytest"]
+test = ["pytest", "numpy"]
 ci = [
   {include-group = "docs"},
   {include-group = "lint"},
