@@ -9,4 +9,5 @@ petsctools provides Pythonic extensions for petsc4py and slepc4py.
 
    examples
    cython
+   appctx
    generated/modules
