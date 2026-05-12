@@ -38,7 +38,7 @@ apidoc_modules = [{
     "destination": "generated",
 }]
 
-# -- sphinx.ext.intersphinx configuration ------------------------------------------
+# -- sphinx.ext.intersphinx configuration -------------------------------------
 
 intersphinx_mapping = {
     'petsc4py': ('https://petsc.org/release/petsc4py/', None),
