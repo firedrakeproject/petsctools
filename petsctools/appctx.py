@@ -32,15 +32,16 @@ class AppContextKey(str):
 class AppContext:
     """
     A dictionary-like object to pass Python data to solvers analogously to
-    passing primitive types with :class:`PETSc.Options <petsc4py.PETSc.Options>`.
+    passing primitive types with :class:`petsc4py.PETSc.Options`.
 
     The ``PETSc.Options`` dictionary can only contain primitive types (e.g.
     str, int, float, bool) as values. The ``AppContext`` allows other Python
     types to be passed into PETSc solvers while still making use of the
     namespacing provided by options prefixing.
 
-    This class *must* be used in conjunction with the :class:`.AppContextManager`.
-    The example below shows how to use these classes together.
+    This class *must* be used in conjunction with the
+    :class:`.AppContextManager`.  The example below shows how to use these
+    classes together.
 
     A typical use case is a Python PC type, here called ``MyCustomPC``, which
     requires some data which is a non-primitive Python type, here an instance
