@@ -2,7 +2,7 @@ The OptionsManager and the AppContext
 -------------------------------------
 
 The PETSc options provide a simple but powerful DSL for configuring composable solvers.
-However, their main limitation is that the values of each option is limited to intrinsic C types, e.g. ``str``, ``float``, ``int``, or ``complex``.
+However, their main limitation is that the values of each option is limited to primitive C types, e.g. ``str``, ``float``, ``int``, or ``complex``.
 Sometimes more advanced data is useful or essential for building a particular solver.
 
 :class:`petsctools.AppContext <.appctx.AppContext>` fulfils this need by providing a means of passing arbitrary Python types through to Python PETSc types (e.g. Python type PCs).
@@ -60,7 +60,7 @@ Constructing :math:`P` requires two values, :math:`\sigma_{p}` and :math:`\omega
 1. The scaling factor :math:`\omega` is just a real number, and can therefore be passed as usual via the :class:`PETSc.Options <petsc4py.PETSc.Options>` using the ``"djacobi_scale"`` option.
 
 2. The diffusion coefficient at each grid point :math:`\sigma_{p}(x_{i})` is defined as a numpy array.
-   This is clearly not an intrinsic type and so cannot be passed via the :class:`PETSc.Options <petsc4py.PETSc.Options>` directly.
+   This is clearly not a primitive type and so cannot be passed via the :class:`PETSc.Options <petsc4py.PETSc.Options>` directly.
    Instead, we access it via the :class:`~.appctx.AppContext` using the ``"djacobi_sigma"`` key.
 
 The :class:`~petsctools.appctx.AppContext` mimics the :class:`PETSc.Options <petsc4py.PETSc.Options>` very closely, but can contain arbitrary Python data.

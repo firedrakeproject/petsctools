@@ -22,6 +22,11 @@ extensions = [
     "sphinx.ext.intersphinx"
 ]
 
+# Document special methods
+autodoc_default_options = {
+    'special-members': '__getitem__',
+}
+
 templates_path = ["_templates"]
 exclude_patterns = []
 
