@@ -15,6 +15,11 @@ from .utils import PETSC4PY_INSTALLED
 # is not available then attempting to access these attributes will raise an
 # informative error.
 if PETSC4PY_INSTALLED:
+    from .appctx import (  # noqa: F401
+        AppContext,
+        AppContextManager,
+        PetscToolsAppctxException,
+    )
     from .citation import (  # noqa: F401
         add_citation,
         cite,
@@ -65,6 +70,9 @@ else:
             "set_default_parameter",
             "DefaultOptionSet",
             "PCBase",
+            "AppContext",
+            "AppContextManager",
+            "PetscToolsAppctxException",
         }
         if name in petsc4py_attrs:
             raise ImportError(

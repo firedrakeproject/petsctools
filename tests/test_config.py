@@ -24,7 +24,7 @@ def test_get_petsc_dirs():
     petsc_dir = petsctools.get_petsc_dir()
     petsc_arch = petsctools.get_petsc_arch()
 
-    expected = (petsc_dir, f"{petsc_dir}/{petsc_arch}") 
+    expected = (petsc_dir, f"{petsc_dir}/{petsc_arch}")
     assert petsctools.get_petsc_dirs() == expected
 
     expected = (
