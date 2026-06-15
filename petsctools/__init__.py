@@ -1,5 +1,4 @@
 from .config import (  # noqa: F401
-    MissingPetscException,
     get_config,
     get_petsc_dir,
     get_petsc_arch,
@@ -8,7 +7,12 @@ from .config import (  # noqa: F401
     get_petscconf_h,
     get_external_packages,
 )
-from .exceptions import PetscToolsException  # noqa: F401
+from .exceptions import (  # noqa: F401
+    PetscToolsException,
+    MissingPetscException,
+    InvalidEnvironmentException,
+    InvalidPetscVersionException,
+)
 from .utils import PETSC4PY_INSTALLED
 
 # Now conditionally import the functions that depend on petsc4py. If petsc4py
@@ -26,11 +30,7 @@ if PETSC4PY_INSTALLED:
         print_citations_at_exit,
     )
     from .config import get_blas_library  # noqa: F401
-    from .init import (  # noqa: F401
-        InvalidEnvironmentException,
-        InvalidPetscVersionException,
-        init,
-    )
+    from .init import init  # noqa: F401
     from .options import (  # noqa: F401
         flatten_parameters,
         get_commandline_options,
@@ -54,8 +54,6 @@ else:
             "cite",
             "print_citations_at_exit",
             "get_blas_library",
-            "InvalidEnvironmentException",
-            "InvalidPetscVersionException",
             "init",
             "flatten_parameters",
             "get_commandline_options",
