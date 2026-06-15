@@ -128,7 +128,7 @@ jobs:
           fi
 
           : # Test that running 'petsctools.init' after PETSc is initialised raises a warning
-          if [ -z "$( python -c 'import petsc4py, petsctools; petsc4py.init(); petsctools.init()' | grep 'PETSc has already been initialised' )" ]; then
+          if [ -z "$( 2>&1 python -c 'import petsc4py, petsctools; petsc4py.init(); petsctools.init()' | grep 'PETSc has already been initialised' )" ]; then
             echo "ERROR: petsctools.init should have raised a warning"
             exit 1
           fi
