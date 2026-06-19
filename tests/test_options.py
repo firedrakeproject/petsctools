@@ -159,6 +159,7 @@ def test_default_options():
     assert options2.parameters["opt4"] == "6"
 
 
+@pytest.mark.skipnopetsc4py
 @pytest.mark.parametrize("options_prefix", (None, "", "custom_"))
 def test_commandline_options(caplog, options_prefix):
     from petsc4py import PETSc
