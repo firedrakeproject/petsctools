@@ -3,7 +3,6 @@ from __future__ import annotations
 import weakref
 import contextlib
 import functools
-import itertools
 import warnings
 from functools import cached_property
 from typing import Any, Iterable
@@ -466,7 +465,8 @@ class OptionsManager:
                 parameters[key] = v
 
                 if key in to_delete:
-                    # option is set globally, don't drop when we leave the context
+                    # option is set globally, don't drop when we exit the
+                    # context manager
                     to_delete.remove(key)
 
         self.parameters = parameters
@@ -566,7 +566,8 @@ class OptionsManager:
     def options_object(self):
         from petsc4py import PETSc
 
-        # We can't pass the prefix here because that doesn't DTRT for flag options
+        # We can't pass the prefix here because that doesn't DTRT
+        # for flag options
         return PETSc.Options()
 
 
