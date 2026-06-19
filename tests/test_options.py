@@ -157,3 +157,47 @@ def test_default_options():
     assert options2.parameters["opt2"] == "2"
     assert options2.parameters["opt3"] == "3"
     assert options2.parameters["opt4"] == "6"
+
+
+@pytest.mark.parametrize("options_prefix", (None, "", "custom_"))
+def test_commandline_options(options_prefix):
+    from petsc4py import PETSc
+
+    if options_prefix is None:
+        true_prefix = f"petsctools_{petsctools.OptionsManager.count}_"
+    else:
+        true_prefix = options_prefix
+
+    # Put some options in the database as though they were passed by a user on
+    # the command line
+    options = PETSc.Options()
+    options["opt1"] = "unused"
+    options[f"{true_prefix}opt2"] = "will_overwrite"
+    options[f"{true_prefix}opt3"] = "extra"
+
+    default_params = {
+        # this will get ignored because we pass something on the command line instead
+        "opt2": "default_opt2",
+        # this will be inserted and popped from the database
+        "opt4": "default_opt4",
+    }
+    om = petsctools.OptionsManager(default_params, options_prefix=options_prefix)
+
+    assert om.options_prefix == true_prefix
+
+    with om.inserted_options():
+        assert options["opt1"] == "unused"
+        assert options[f"{om.options_prefix}opt2"] == "will_overwrite"
+        assert options[f"{om.options_prefix}opt3"] == "extra"
+        assert options[f"{om.options_prefix}opt4"] == "default_opt4"
+
+    # make sure the command line options are persistent
+    assert options["opt1"] == "unused"
+    assert options[f"{om.options_prefix}opt2"] == "will_overwrite"
+    assert options[f"{om.options_prefix}opt3"] == "extra"
+    assert f"{om.options_prefix}opt4" not in options
+
+    # TODO
+    # make sure we warn on usage if prefix is None
+    # and the appctx too
+

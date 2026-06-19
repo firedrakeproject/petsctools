@@ -280,6 +280,7 @@ def get_default_options(default_options_set: DefaultOptionSet,
     return default_options
 
 
+# TODO: Add note about how we 'freeze' options at instantiation
 class OptionsManager:
     """Class that helps with managing setting PETSc options.
 
@@ -405,14 +406,13 @@ class OptionsManager:
     AppContextManager
     """
 
-    count = itertools.count()
+    count = 0
 
     def __init__(self, parameters: dict,
                  options_prefix: str | None = None,
                  default_prefix: str | None = None,
                  default_options_set: DefaultOptionSet | None = None,
                  appmngr: AppContextManager | None = None):
-        super().__init__()
         if parameters is None:
             parameters = {}
         else:
@@ -420,61 +420,48 @@ class OptionsManager:
             parameters = flatten_parameters(parameters)
 
         # If no prefix is provided generate a default prefix
-        # and ignore any command line options
         if options_prefix is None:
             default_prefix = default_prefix or "petsctools_"
             default_prefix = _validate_prefix(default_prefix)
-            self.options_prefix = f"{default_prefix}{next(self.count)}_"
-            self.parameters = parameters
-            self.to_delete = set(parameters)
-
+            options_prefix = f"{default_prefix}{self.count}_"
+            self.count += 1
+            unsafe_prefix = True
         else:
             options_prefix = _validate_prefix(options_prefix)
-            self.options_prefix = options_prefix
+            unsafe_prefix = False
 
-            # Are we part of a solver set sharing defaults?
-            if default_options_set:
-                if options_prefix not in default_options_set.custom_prefixes:
-                    raise ValueError(
-                        f"The options_prefix {options_prefix} must be one"
-                        f" of the custom_prefixes of the DefaultOptionSet"
-                        f" {default_options_set.custom_prefixes}")
-                default_options = get_default_options(
-                    default_options_set, self.options_object)
-            else:
-                default_options = {}
+        # Are we part of a solver set sharing defaults?
+        if default_options_set:
+            if options_prefix not in default_options_set.custom_prefixes:
+                raise ValueError(
+                    f"The options_prefix {options_prefix} must be one"
+                    f" of the custom_prefixes of the DefaultOptionSet"
+                    f" {default_options_set.custom_prefixes}")
+            default_options = get_default_options(
+                default_options_set, self.options_object)
+        else:
+            default_options = {}
 
-            # Note: we need to know which parameters to_delete
-            # so we need to exclude the relevant command line
-            # options when combining the parameters from the
-            # defaults and the source code.
+        # Start building parameters from the defaults so
+        # that they will overwritten by any other source.
+        parameters = default_options | parameters
 
-            # Start building parameters from the defaults so
-            # that they will overwritten by any other source.
-            self.parameters = {
-                k: v
-                for k, v in default_options.items()
-                if options_prefix + k not in get_commandline_options()
-            }
+        # The parameters to drop from the global options when we leave the
+        # inserted_options context. This is everything except for options
+        # passed on the command line.
+        to_delete = set(parameters.keys())
+        for k, v in self.options_object.getAll().items():
+            if k.startswith(options_prefix):
+                if unsafe_prefix:
+                    print("WARN")
+                parameters[k[len(options_prefix):]] = v
+            if k in to_delete:
+                # option is set globally, don't drop when we leave the context
+                to_delete.delete(k)
 
-            # Update using the parameters passed in the code but
-            # exclude those options from the dict that were passed
-            # on the commandline because those have global scope and are
-            # not under the control of the options manager.
-            self.parameters.update({
-                k: v
-                for k, v in parameters.items()
-                if options_prefix + k not in get_commandline_options()
-            })
-            self.to_delete = set(self.parameters)
-
-            # Now update parameters from options, so that they're
-            # available to solver setup (for, e.g., matrix-free).
-            # Can't ask for the prefixed guy in the options object,
-            # since that does not DTRT for flag options.
-            for k, v in self.options_object.getAll().items():
-                if k.startswith(self.options_prefix):
-                    self.parameters[k[len(self.options_prefix):]] = v
+        self.parameters = parameters
+        self.to_delete = to_delete
+        self.options_prefix = options_prefix
 
         self._setfromoptions = False
 
@@ -562,12 +549,13 @@ class OptionsManager:
             for k in self.to_delete:
                 if self.options_object.used(self.options_prefix + k):
                     self._used_options.add(k)
-                del self.options_object[self.options_prefix + k]
+                del self.options_object[k]
 
     @functools.cached_property
     def options_object(self):
         from petsc4py import PETSc
 
+        # We can't pass the prefix here because that doesn't DTRT for flag options
         return PETSc.Options()
 
 
