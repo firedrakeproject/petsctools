@@ -10,5 +10,17 @@ class PetscToolsAppctxException(PetscToolsException):
     """Exception raised when the Appctx is missing an entry."""
 
 
+class InvalidEnvironmentException(PetscToolsException):
+    pass
+
+
+class InvalidPetscVersionException(PetscToolsException):
+    pass
+
+
+class MissingPetscException(PetscToolsException):
+    pass
+
+
 class PetscToolsWarning(UserWarning):
     """Generic base class for petsctools warnings."""

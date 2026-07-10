@@ -1,37 +1,64 @@
 import os
 import sys
+import types
 import warnings
+from collections.abc import Sequence
 from pathlib import Path
 
+import petsc4py
+import petsc4py.lib
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 
 import petsctools.options
-from petsctools.exceptions import PetscToolsException
+from petsctools.exceptions import (
+    InvalidEnvironmentException, InvalidPetscVersionException
+)
 
 
-class InvalidEnvironmentException(PetscToolsException):
-    pass
+def init(
+    argv: Sequence[str] | None = None,
+    *,
+    version_spec: SpecifierSet | str = "",
+) -> types.ModuleType:
+    """Initialise PETSc.
 
+    Parameters
+    ----------
+    argv
+        Command line options to be passed to PETSc at initialisation. If
+        unspecified then `sys.argv` is used.
+    version_spec
+        String describing PETSc version constraints. For example
+        '>=3.25.2,<3.26'.
 
-class InvalidPetscVersionException(PetscToolsException):
-    pass
+    Returns
+    -------
+    types.ModuleType
+        The `petsc4py.PETSc` module. This is convenient for avoiding
+        boilerplate.
 
-
-def init(argv=None, *, version_spec=""):
-    """Initialise PETSc."""
-    import petsc4py
-
+    """
     if argv is None:
         argv = sys.argv
 
-    petsc4py.init(argv)
+    # We have to do this dance because we need to access petsc4py.PETSc without
+    # initialising PETSc. This is what happens in
+    # https://gitlab.com/petsc/petsc/-/blob/main/src/binding/petsc4py/src/petsc4py/PETSc.py
+    PETSc = petsc4py.lib.ImportPETSc()
+    if PETSc.Sys.isInitialized():
+        warnings.warn(
+            "Calling petsctools.init but PETSc has already been initialised, "
+            "any command line options will be ignored.",
+            stacklevel=2,
+        )
+    else:
+        PETSc._initialize(argv)
+
     check_environment_matches_petsc4py_config()
     check_petsc_version(version_spec)
 
     # Save the command line options so they may be inspected later
-    from petsc4py import PETSc
-
     petsctools.options._commandline_options = frozenset(
         PETSc.Options().getAll()
     )
@@ -40,8 +67,6 @@ def init(argv=None, *, version_spec=""):
 
 
 def check_environment_matches_petsc4py_config():
-    import petsc4py
-
     config = petsc4py.get_config()
     petsc_dir = config["PETSC_DIR"]
     petsc_arch = config["PETSC_ARCH"]
