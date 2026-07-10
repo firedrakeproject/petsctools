@@ -21,8 +21,7 @@ from petsc4py.PETSc cimport (
 )
 
 
-cdef extern from "petsc.h":
-    # fundamental types
+cdef extern from "petscsystypes.h":
     ctypedef long PetscInt
     ctypedef double PetscReal
     ctypedef double PetscScalar
@@ -37,16 +36,18 @@ cdef extern from "petsc.h":
         PETSC_OWN_POINTER
         PETSC_USE_POINTER
 
-    # memory management
+cdef extern from "petscsys.h":
     PetscErrorCode PetscCalloc1(size_t,void*)
     PetscErrorCode PetscMalloc1(size_t,void*)
     PetscErrorCode PetscFree(void*)
 
-    # Mat
+# Mat
+cdef extern from "petscmat.h":
     PetscErrorCode MatSetValue(Mat,PetscInt,PetscInt,const PetscScalar,InsertMode)
     PetscErrorCode MatSetValuesBlockedLocal(Mat,PetscInt,const PetscInt[],PetscInt,const PetscInt[],const PetscScalar[],InsertMode)
 
-    # PetscSF
+# PetscSF
+cdef extern from "petscsf.h":
     ctypedef struct PetscSFNode:
         PetscInt rank
         PetscInt index
@@ -54,7 +55,14 @@ cdef extern from "petsc.h":
     PetscErrorCode PetscSFGetGraph(PetscSF,PetscInt*,PetscInt*,const PetscInt**,const PetscSFNode**)
     PetscErrorCode PetscSFSetGraph(PetscSF,PetscInt,PetscInt,PetscInt*,PetscCopyMode,PetscSFNode*,PetscCopyMode)
 
-    # PetscSection
+# PetscSection
+cdef extern from "petscsection.h":
     PetscErrorCode PetscSectionGetDof(PetscSection,PetscInt,PetscInt*)
     PetscErrorCode PetscSectionSetDof(PetscSection,PetscInt,PetscInt)
     PetscErrorCode PetscSectionGetOffset(PetscSection,PetscInt,PetscInt*)
+    PetscErrorCode PetscSectionSetOffset(PetscSection,PetscInt,PetscInt)
+    PetscErrorCode PetscSectionGetConstraintDof(PetscSection,PetscInt,PetscInt*)
+    PetscErrorCode PetscSectionSetConstraintDof(PetscSection,PetscInt,PetscInt)
+    PetscErrorCode PetscSectionGetConstraintIndices(PetscSection,PetscInt,const PetscInt*[])
+    PetscErrorCode PetscSectionSetConstraintIndices(PetscSection,PetscInt,const PetscInt[])
+    PetscErrorCode PetscSectionGetMaxDof(PetscSection,PetscInt*)
