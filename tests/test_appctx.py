@@ -134,7 +134,12 @@ def test_appctx_get_all():
     item2 = object()
 
     optsmngr = petsctools.OptionsManager(
-        {"item1": item1, "item2": item2, "other_option": 666},
+        {
+            "item1": item1,
+            "item2": item2,
+            "other_option": 666,
+            "another_option": None,
+        },
         options_prefix="myprefix",
     )
     with optsmngr.inserted_options():

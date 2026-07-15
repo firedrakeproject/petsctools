@@ -224,7 +224,7 @@ class AppContext:
         return {
             key:  _global_appctx_data[value]
             for key, value in PETSc.Options(self.prefix).getAll().items()
-            if value.startswith(_APPCTX_KEY_PREFIX)
+            if isinstance(value, str) and value.startswith(_APPCTX_KEY_PREFIX)
         }
 
 
