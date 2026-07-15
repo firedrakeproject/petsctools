@@ -126,3 +126,19 @@ def test_appctx_key():
 
         prm = appctx1['param']
         assert prm is prefix1_param
+
+
+@pytest.mark.skipnopetsc4py
+def test_appctx_get_all():
+    PETSc = petsctools.init()
+
+    item1 = object()
+    item2 = object()
+
+    optsmngr = petsctools.OptionsManager(
+        {"item1": item1, "item2": item2, "other_option": 666},
+        options_prefix="myprefix",
+    )
+    with optsmngr.inserted_options():
+        appctx = petsctools.AppContext("myprefix")
+        assert appctx.getAll() == {"item1": item1, "item2": item2}

@@ -8,6 +8,9 @@ _global_appctx_data = {}
 """The global storage for user data with arbitrary python types."""
 
 
+_APPCTX_KEY_PREFIX = "petsctools_appctx_key_"
+
+
 class AppContextKey(str):
     """A custom key type for AppContext.
 
@@ -26,7 +29,7 @@ class AppContextKey(str):
 
     @classmethod
     def _generate_key(cls):
-        return f"petsctools_appctx_key_{next(cls._count)}"
+        return f"{_APPCTX_KEY_PREFIX}{next(cls._count)}"
 
 
 class AppContext:
@@ -213,6 +216,16 @@ class AppContext:
             return self[option]
         except PetscToolsAppctxException:
             return default
+
+    def getAll(self) -> dict[str, Any]:
+        """Return all entries in the app context."""
+        from petsc4py import PETSc
+
+        return {
+            key:  _global_appctx_data[value]
+            for key, value in PETSc.Options(self.prefix).getAll().items()
+            if value.startswith(_APPCTX_KEY_PREFIX)
+        }
 
 
 class AppContextManager:
