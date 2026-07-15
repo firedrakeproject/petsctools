@@ -26,7 +26,8 @@ class JacobiTestPC:
 
 @pytest.mark.skipnopetsc4py
 @pytest.mark.parametrize("use_prefix", ["with_prefix", "without_prefix"])
-def test_appctx_context_manager(use_prefix):
+@pytest.mark.parametrize("implicit_appmngr", [False, True])
+def test_appctx_context_manager(use_prefix, implicit_appmngr):
     PETSc = petsctools.init()
     n = 4
     sizes = (n, n)
@@ -40,19 +41,21 @@ def test_appctx_context_manager(use_prefix):
     ksp = PETSc.KSP().create()
     ksp.setOperators(mat, mat)
 
-    appmngr = petsctools.AppContextManager()
+    parameters = {
+        'ksp_type': 'preonly',
+        'pc_type': 'python',
+        'pc_python_type': f'{__name__}.JacobiTestPC',
+        'jacobi_use_prefixed_appctx': use_prefix == "with_prefix",
+    }
+    if implicit_appmngr:
+        appmngr = None
+        parameters['jacobi_scale'] = diag
+    else:
+        appmngr = petsctools.AppContextManager()
+        parameters['jacobi_scale'] = appmngr.add(diag)
 
     petsctools.set_from_options(
-        ksp,
-        parameters={
-            'ksp_type': 'preonly',
-            'pc_type': 'python',
-            'pc_python_type': f'{__name__}.JacobiTestPC',
-            'jacobi_scale': appmngr.add(diag),
-            'jacobi_use_prefixed_appctx': use_prefix == "with_prefix",
-        },
-        options_prefix="myksp",
-        appmngr=appmngr,
+        ksp, parameters=parameters, options_prefix="myksp", appmngr=appmngr
     )
 
     x, b = mat.createVecs()

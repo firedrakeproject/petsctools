@@ -4,6 +4,7 @@ import weakref
 import contextlib
 import functools
 import itertools
+import numbers
 import warnings
 from functools import cached_property
 from typing import Any, Iterable
@@ -280,6 +281,14 @@ def get_default_options(default_options_set: DefaultOptionSet,
     return default_options
 
 
+_native_petsc_option_types = (
+    bool,
+    str,
+    numbers.Number,
+)
+"""Types that are allowed to be directly passed as PETSc options."""
+
+
 class OptionsManager:
     """Class that helps with managing setting PETSc options.
 
@@ -418,6 +427,14 @@ class OptionsManager:
         else:
             # Convert nested dicts
             parameters = flatten_parameters(parameters)
+
+        if appmngr is None:
+            appmngr = AppContextManager()
+
+        # Replace any Python objects in the parameters dict with appctx entries
+        for key, value in parameters.items():
+            if not isinstance(value, _native_petsc_option_types):
+                parameters[key] = appmngr.add(value)
 
         # If no prefix is provided generate a default prefix
         # and ignore any command line options
