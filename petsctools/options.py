@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-import weakref
 import contextlib
 import functools
 import itertools
 import numbers
+import types
 import warnings
+import weakref
 from functools import cached_property
 from typing import Any, Iterable
 
@@ -284,6 +285,7 @@ def get_default_options(default_options_set: DefaultOptionSet,
 _native_petsc_option_types = (
     bool,
     str,
+    types.NoneType,
     numbers.Number,
 )
 """Types that are allowed to be directly passed as PETSc options."""
