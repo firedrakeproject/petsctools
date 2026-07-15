@@ -130,8 +130,6 @@ def test_appctx_key():
 
 @pytest.mark.skipnopetsc4py
 def test_appctx_get_all():
-    PETSc = petsctools.init()
-
     item1 = object()
     item2 = object()
 
