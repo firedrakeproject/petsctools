@@ -182,7 +182,8 @@ class JacobiTestPC:
 
 @pytest.mark.skipnopetsc4py
 @pytest.mark.parametrize("use_prefix", ["with_prefix", "without_prefix"])
-def test_appctx_context_manager(use_prefix):
+@pytest.mark.parametrize("use_pc_class", [False, True])
+def test_appctx_context_manager(use_prefix, use_pc_class):
     PETSc = petsctools.init()
     n = 4
     sizes = (n, n)
@@ -199,10 +200,14 @@ def test_appctx_context_manager(use_prefix):
     parameters = {
         'ksp_type': 'preonly',
         'pc_type': 'python',
-        'pc_python_type': f'{__name__}.JacobiTestPC',
         'jacobi_use_prefixed_appctx': use_prefix == "with_prefix",
         'jacobi_scale': diag,
     }
+    if use_pc_class:
+        parameters['pc_python_type'] = JacobiTestPC
+    else:
+        parameters['pc_python_type'] = f'{__name__}.JacobiTestPC'
+
     petsctools.set_from_options(
         ksp, parameters=parameters, options_prefix="myksp"
     )
