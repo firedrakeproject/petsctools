@@ -58,14 +58,11 @@ class DiffusionJacobiPC:
     prefix = "djacobi_"
 
     def setFromOptions(self, pc):
-        from petsc4py import PETSc
         prefix = (pc.getOptionsPrefix() or "") + self.prefix
 
-        options = PETSc.Options()
+        options = petsctools.Options()
         scale = options.getReal(prefix + "scale", 1.0)
-
-        appctx = petsctools.AppContext()
-        sigma = appctx[prefix + "sigma"]
+        sigma = options[prefix + "sigma"]
 
         Ap = diffusion_mat(sigma)
         P = Ap.getDiagonal()

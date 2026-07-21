@@ -157,3 +157,88 @@ def test_default_options():
     assert options2.parameters["opt2"] == "2"
     assert options2.parameters["opt3"] == "3"
     assert options2.parameters["opt4"] == "6"
+
+
+class JacobiTestPC:
+    prefix = "jacobi_"
+
+    def setFromOptions(self, pc):
+        from petsc4py import PETSc
+        prefix = (pc.getOptionsPrefix() or "") + self.prefix
+
+        use_prefixed_appctx = PETSc.Options().getBool(
+            prefix + "use_prefixed_appctx")
+
+        if use_prefixed_appctx:
+            opts = petsctools.Options(prefix)
+            self.scale = opts["scale"]
+        else:
+            opts = petsctools.Options()
+            self.scale = opts[prefix + "scale"]
+
+    def apply(self, pc, x, y):
+        y.pointwiseMult(x, self.scale)
+
+
+@pytest.mark.skipnopetsc4py
+@pytest.mark.parametrize("use_prefix", ["with_prefix", "without_prefix"])
+def test_appctx_context_manager(use_prefix):
+    PETSc = petsctools.init()
+    n = 4
+    sizes = (n, n)
+
+    diag = PETSc.Vec().createSeq(sizes)
+    diag.setSizes((n, n))
+    diag.array[:] = [1, 2, 3, 4]
+
+    mat = PETSc.Mat().createConstantDiagonal((sizes, sizes), 1.0)
+
+    ksp = PETSc.KSP().create()
+    ksp.setOperators(mat, mat)
+
+    parameters = {
+        'ksp_type': 'preonly',
+        'pc_type': 'python',
+        'pc_python_type': f'{__name__}.JacobiTestPC',
+        'jacobi_use_prefixed_appctx': use_prefix == "with_prefix",
+        'jacobi_scale': diag,
+    }
+    petsctools.set_from_options(
+        ksp, parameters=parameters, options_prefix="myksp"
+    )
+
+    x, b = mat.createVecs()
+    b.setRandom()
+
+    xcheck = x.duplicate()
+    xcheck.pointwiseMult(b, diag)
+
+    with petsctools.inserted_options(ksp):
+        ksp.solve(b, x)
+
+    assert (x - xcheck).norm() < 1e-14
+
+
+@pytest.mark.skipnopetsc4py
+def test_python_options():
+    petsctools.init()
+
+    prefix0_param = object()
+    prefix1_param = object()
+    opts_manager = petsctools.OptionsManager(
+        {
+            "prefix0_param": prefix0_param,
+            "prefix1_param": prefix1_param,
+        },
+        options_prefix="",
+    )
+
+    opts0 = petsctools.Options("prefix0_")
+    opts1 = petsctools.Options("prefix1_")
+
+    with opts_manager.inserted_options():
+        assert opts0.get("param") is prefix0_param
+        assert opts0["param"] is prefix0_param
+
+        assert opts1.get("param") is prefix1_param
+        assert opts1["param"] is prefix1_param
