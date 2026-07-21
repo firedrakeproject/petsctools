@@ -433,7 +433,7 @@ class OptionsManager:
         appmngr = AppContextManager()
         for key, value in parameters.items():
             # Convert Python PC objects into their string representation
-            if key.endswith("pc_python_type") and isinstance(value, type):
+            if key.endswith("python_type") and isinstance(value, type):
                 parameters[key] = f"{value.__module__}.{value.__name__}"
             elif not isinstance(value, _native_petsc_option_types):
                 parameters[key] = appmngr.add(value)
