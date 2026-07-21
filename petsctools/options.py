@@ -1090,5 +1090,5 @@ class Options(PETSc.Options):
         """Return all entries."""
         return {
             key: _global_appctx_data.get(value, value)
-            for key, value in PETSc.Options(self.prefix).getAll().items()
+            for key, value in super().getAll().items()
         }

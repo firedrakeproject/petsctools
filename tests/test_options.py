@@ -227,8 +227,10 @@ def test_python_options():
     prefix1_param = object()
     opts_manager = petsctools.OptionsManager(
         {
-            "prefix0_param": prefix0_param,
-            "prefix1_param": prefix1_param,
+            "prefix0_param1": prefix0_param,
+            "prefix0_param2": "some_value",
+            "prefix1_param1": prefix1_param,
+            "prefix1_param2": 666,
         },
         options_prefix="",
     )
@@ -237,8 +239,13 @@ def test_python_options():
     opts1 = petsctools.Options("prefix1_")
 
     with opts_manager.inserted_options():
-        assert opts0.get("param") is prefix0_param
-        assert opts0["param"] is prefix0_param
+        assert opts0.get("param1") is prefix0_param
+        assert opts0["param1"] is prefix0_param
+        assert opts0.getAll() \
+            == {"param1": prefix0_param, "param2": "some_value"}
 
-        assert opts1.get("param") is prefix1_param
-        assert opts1["param"] is prefix1_param
+        assert opts1.get("param1") is prefix1_param
+        assert opts1["param1"] is prefix1_param
+        # NOTE: ideally we would get the integer back here
+        assert opts1.getAll() \
+            == {"param1": prefix1_param, "param2": "666"}
