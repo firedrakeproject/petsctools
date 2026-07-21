@@ -97,8 +97,6 @@ def test_appctx_docs():
     # [appctx_docs create_ksp-end]
 
     # [appctx_docs set_from_options-start]
-    appmngr = petsctools.AppContextManager()
-
     petsctools.set_from_options(
         ksp,
         parameters={
@@ -107,9 +105,8 @@ def test_appctx_docs():
             'pc_type': 'python',
             'pc_python_type': f'{__name__}.DiffusionJacobiPC',
             'djacobi_scale': 0.9,
-            'djacobi_sigma': appmngr.add(sigma_p),
+            'djacobi_sigma': sigma_p,
         },
-        appmngr=appmngr,
         options_prefix="",
     )
     # [appctx_docs set_from_options-end]
