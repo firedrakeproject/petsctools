@@ -487,8 +487,8 @@ class OptionsManager:
         # Decide whether to warn for unused options
         options_left = self.options_object.getBool("options_left", False)
         with self.inserted_options():
-            options_left = self.options_object.getBool(
-                f"{self.options_prefix}options_left", options_left)
+            options_left = options_left or self.options_object.getBool(
+                f"{self.options_prefix}options_left", False)
 
         if options_left:
             weakref.finalize(self, _warn_unused_options,
