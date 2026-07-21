@@ -1,12 +1,12 @@
-The OptionsManager and the AppContext
--------------------------------------
+The OptionsManager
+------------------
 
 The PETSc options provide a simple but powerful DSL for configuring composable solvers.
 However, their main limitation is that the values of each option is limited to primitive C types, e.g. ``str``, ``float``, ``int``, or ``complex``.
 Sometimes more advanced data is useful or essential for building a particular solver.
 
-:class:`petsctools.AppContext <.appctx.AppContext>` fulfils this need by providing a means of passing arbitrary Python types through to Python PETSc types (e.g. Python type PCs).
-In this demo we show how to use the :class:`~.appctx.AppContext` to pass data to a custom Python type PC using the variable coefficient diffusion equation as an example.
+:class:`petsctools.Options <.options.Options>` fulfils this need by providing a means of passing arbitrary Python types through to Python PETSc types (e.g. Python type PCs).
+In this demo we show how to use the :class:`~.options.Options` to pass data to a custom Python type PC using the variable coefficient diffusion equation as an example.
 
 
 Diffusion equation with variable coefficients
@@ -61,10 +61,10 @@ Constructing :math:`P` requires two values, :math:`\sigma_{p}` and :math:`\omega
 
 2. The diffusion coefficient at each grid point :math:`\sigma_{p}(x_{i})` is defined as a numpy array.
    This is clearly not a primitive type and so cannot be passed via the :class:`PETSc.Options <petsc4py.PETSc.Options>` directly.
-   Instead, we access it via the :class:`~.appctx.AppContext` using the ``"djacobi_sigma"`` key.
+   Instead, we access it via the :class:`~.options.Options` using the ``"djacobi_sigma"`` key.
 
-The :class:`~petsctools.appctx.AppContext` mimics the :class:`PETSc.Options <petsc4py.PETSc.Options>` very closely, but can contain arbitrary Python data.
-We will see below how to add ``sigma`` into the :class:`~petsctools.appctx.AppContext` so that it is available to the ``DiffusionJacobiPC``.
+The :class:`~petsctools.options.Options` extends the :class:`PETSc.Options <petsc4py.PETSc.Options>` to permit containing arbitrary Python data.
+We will see below how to add ``sigma`` into the :class:`~petsctools.options.Options` so that it is available to the ``DiffusionJacobiPC``.
 
 .. literalinclude:: ../../tests/docs/test_appctx_docs.py
     :language: python3
@@ -89,13 +89,7 @@ The Options and the AppContext
 
 Now we configure ``ksp`` by passing PETSc options as key-value pairs in the ``parameters`` dictionary to :func:`petsctools.set_from_options <.options.set_from_options>`.
 This function will create a :class:`petsctools.OptionsManager <.options.OptionsManager>` and attach it to ``ksp``.
-
-We can see that common options, e.g. ``"ksp_type"`` are set as usual in the ``parameters`` dictionary.
-However, when we come to the ``"djacobi_sigma"`` value we use the :class:`petsctools.AppContextManager <.appctx.AppContextManager>` class.
-The :meth:`AppContextManager.add <.appctx.AppContextManager.add>` method returns a unique value which is used to associate a PETSc option to whatever data was passed to ``add``.
-For example, adding the key-value pair ``"djacobi_sigma": appmngr.add(sigma_p)`` to the ``parameters`` dictionary means that, during the solve, we will be able to access ``sigma_p`` via ``AppContext()["djacobi_sigma"]``.
-
-We then pass the :class:`~.appctx.AppContextManager` to :func:`~.options.set_from_options` so that it can be attached to ``ksp`` and its data can be made available later on during the solve.
+Observe that we are passing arbitrary Python data (``sigma_p``) alongside native types.
 
 .. literalinclude:: ../../tests/docs/test_appctx_docs.py
     :language: python3
@@ -107,9 +101,9 @@ Solving the KSP
 ~~~~~~~~~~~~~~~
 
 Now we come to actually solving the linear equation :math:`Au=b`.
-To avoid memory leaks, :func:`~.options.set_from_options` does not permanently insert the contents of ``parameters`` and the ``appmngr`` into the global :class:`PETSc.Options <petsc4py.PETSc.Options>` and :class:`~.appctx.AppContext` databases respectively.
+To avoid memory leaks, :func:`~.options.set_from_options` does not permanently insert the contents of ``parameters`` into the global options database.
 Instead, we use the :func:`petsctools.inserted_options <.options.inserted_options>` context manager.
-On entry, this context manager inserts the contents of ``parameters`` and ``appmngr`` into the global databases, and on exit it removes them again.
+On entry, this context manager inserts the contents of ``parameters`` into the global database, and on exit it removes them again.
 This means that we need to use the :func:`~.options.inserted_options` context manager whenever these entries will be needed, for example during the solve when the KSP and PC are being set up.
 
 .. literalinclude:: ../../tests/docs/test_appctx_docs.py
