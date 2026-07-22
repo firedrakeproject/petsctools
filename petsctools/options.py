@@ -922,6 +922,7 @@ _global_appctx_data = {}
 
 
 _APPCTX_KEY_PREFIX = "petsctools_appctx_key_"
+"""Prefix used for all appctx entries in the options database."""
 
 
 class AppContextKey(str):
@@ -950,48 +951,6 @@ class Options(PETSc.Options):
     This class extends the :class:`petsc4py.PETSc.Options` class by allowing
     it to insert and retrieve arbitrary Python objects instead of a select
     set of native types.
-
-    As an example, consider a typical use case is a Python PC type, here
-    called ``MyCustomPC``, which requires some data which is a
-    non-primitive Python type, here an instance
-    of ``MyCustomData``.
-
-    .. code-block:: python3
-
-        class MyCustomData:
-            ...
-
-        class MyCustomPC:
-            def setUp(self, pc):
-                prefix = pc.getOptionsPrefix()
-                option_key = 'custompc_data'
-                self.data = petsctools.Options()[prefix+option_key]
-                # or:
-                # self.data = petsctools.Options(prefix)[option_key]
-            ...
-
-    Instances of ``MyCustomData`` may be inserted into the options database
-    as normal:
-
-    .. code-block:: python3
-
-        data = MyCustomData(...)
-
-        petsctools.set_from_options(
-            ksp,
-            parameters={
-                'pc_type': 'python',
-                'pc_python_type': 'MyCustomPC',
-                'custompc_data': data},
-            options_prefix='solver')
-
-    When the context manager exits, the entries are removed from the global
-    set of options.
-
-    .. code-block:: python3
-
-        with petsctools.inserted_options(ksp):
-            ksp.solve(b, x)
 
     Parameters
     ----------
