@@ -19,11 +19,6 @@ from .utils import PETSC4PY_INSTALLED
 # is not available then attempting to access these attributes will raise an
 # informative error.
 if PETSC4PY_INSTALLED:
-    from .appctx import (  # noqa: F401
-        AppContext,
-        AppContextManager,
-        PetscToolsAppctxException,
-    )
     from .citation import (  # noqa: F401
         add_citation,
         cite,
@@ -34,7 +29,9 @@ if PETSC4PY_INSTALLED:
     from .options import (  # noqa: F401
         flatten_parameters,
         get_commandline_options,
+        Options,
         OptionsManager,
+        AppContextManager,
         petscobj2str,
         attach_options,
         has_options,
@@ -57,7 +54,9 @@ else:
             "init",
             "flatten_parameters",
             "get_commandline_options",
+            "Options",
             "OptionsManager",
+            "AppContextManager",
             "petscobj2str",
             "attach_options",
             "has_options",
@@ -66,9 +65,9 @@ else:
             "is_set_from_options",
             "inserted_options",
             "set_default_parameter",
+            "Options",
             "DefaultOptionSet",
             "PCBase",
-            "AppContext",
             "AppContextManager",
             "PetscToolsAppctxException",
         }
