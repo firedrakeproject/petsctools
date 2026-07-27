@@ -157,3 +157,16 @@ def test_default_options():
     assert options2.parameters["opt2"] == "2"
     assert options2.parameters["opt3"] == "3"
     assert options2.parameters["opt4"] == "6"
+
+
+@pytest.mark.skipnopetsc4py
+def test_inserted_options_dict():
+    from petsc4py import PETSc
+    prefix = "prefix"
+    params = {
+        "opt_int": 3,
+        "opt_flag": None,
+    }
+    with petsctools.inserted_options(parameters=params, options_prefix=prefix):
+        assert PETSc.Options().getInt("prefix_opt_int") == 3
+        assert PETSc.Options().getBool("prefix_opt_flag")
