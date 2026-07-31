@@ -29,6 +29,7 @@ cdef extern from "petscsystypes.h":
         PETSC_TRUE
         PETSC_FALSE
     ctypedef enum InsertMode:
+        NOT_SET_VALUES
         INSERT_VALUES
         ADD_VALUES
     ctypedef enum PetscCopyMode:
