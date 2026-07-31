@@ -1,6 +1,7 @@
-import pytest
 # [appctx_docs create_mat-start]
 import numpy as np
+import pytest
+
 import petsctools
 
 

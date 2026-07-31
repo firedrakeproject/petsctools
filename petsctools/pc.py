@@ -1,4 +1,5 @@
 import abc
+
 from .exceptions import PetscToolsException
 
 
@@ -111,7 +112,6 @@ class PCBase(abc.ABC):
         This method is only called on the first time that the ``setUp``
         method is called.
         """
-        pass
 
     @abc.abstractmethod
     def update(self, pc):
@@ -123,7 +123,6 @@ class PCBase(abc.ABC):
         This method is not needed for all preconditioners and can often
         be a no-op.
         """
-        pass
 
     @abc.abstractmethod
     def apply(self, pc, x, y):
@@ -131,7 +130,6 @@ class PCBase(abc.ABC):
 
         Both x and y are PETSc Vecs, y is not guaranteed to be zero on entry.
         """
-        pass
 
     def applyTranspose(self, pc, x, y):
         """Apply the preconditioner transpose to x, putting the result in y.

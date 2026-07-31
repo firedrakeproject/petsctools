@@ -1,22 +1,22 @@
 from __future__ import annotations
 
-import weakref
 import contextlib
 import functools
 import itertools
 import warnings
+import weakref
+from collections.abc import Iterable
 from functools import cached_property
-from typing import Any, Iterable
+from typing import Any
 
 import petsc4py
 
+from petsctools.appctx import AppContextManager
 from petsctools.exceptions import (
     PetscToolsException,
-    PetscToolsWarning,
     PetscToolsNotInitialisedException,
+    PetscToolsWarning,
 )
-from petsctools.appctx import AppContextManager
-
 
 _commandline_options = None
 
@@ -67,8 +67,7 @@ def flatten_parameters(parameters, sep="_"):
             option = sentinel
             for option, value in parameters.items():
                 # Recurse into values to flatten any dicts.
-                for pair in flatten(value, option, *prefixes):
-                    yield pair
+                yield from flatten(value, option, *prefixes)
             # Make sure zero-length dicts come back.
             if option is sentinel:
                 yield (prefixes, parameters)
@@ -85,8 +84,7 @@ def flatten_parameters(parameters, sep="_"):
                 yield key + sep
             else:
                 yield key
-        else:
-            yield keys[0]
+        yield keys[0]
 
     for keys, value in flatten(parameters):
         option = "".join(map(str, munge(keys)))
@@ -275,7 +273,7 @@ def get_default_options(default_options_set: DefaultOptionSet,
     }
     # Sanity check, this should never happen.
     assert not any(k.startswith(str(end))
-                   for k in default_options.keys()
+                   for k in default_options
                    for end in custom_prefix_endings)
     return default_options
 
