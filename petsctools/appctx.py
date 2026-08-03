@@ -1,7 +1,8 @@
-from typing import Any
 import itertools
-from functools import cached_property
 from contextlib import contextmanager
+from functools import cached_property
+from typing import Any
+
 from petsctools.exceptions import PetscToolsAppctxException
 
 _global_appctx_data = {}

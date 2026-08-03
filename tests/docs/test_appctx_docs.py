@@ -1,6 +1,10 @@
+# Don't reorder imports here because we include the code in the manual
+# ruff: noqa: I001
+
 import pytest
 # [appctx_docs create_mat-start]
 import numpy as np
+
 import petsctools
 
 

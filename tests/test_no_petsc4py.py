@@ -1,5 +1,6 @@
-import petsctools
 import pytest
+
+import petsctools
 
 
 @pytest.mark.skippetsc4py

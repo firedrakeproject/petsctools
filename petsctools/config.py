@@ -73,7 +73,7 @@ def get_petsc_dirs(
     return tuple(dirs)
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def get_petscvariables():
     """Return PETSc's configuration information."""
     path = os.path.join(
@@ -82,11 +82,11 @@ def get_petscvariables():
         "lib/petsc/conf/petscvariables",
     )
     with open(path) as f:
-        pairs = [line.split("=", maxsplit=1) for line in f.readlines()]
+        pairs = [line.split("=", maxsplit=1) for line in f]
     return {k.strip(): v.strip() for k, v in pairs}
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def get_petscconf_h():
     """Get dict of PETSc include variables from the file:
     $PETSC_DIR/$PETSC_ARCH/include/petscconf.h
@@ -108,7 +108,7 @@ def get_petscconf_h():
     return {k: v.strip() for k, v in splitlines}
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def get_external_packages():
     """Return a list of PETSc external packages that are installed."""
     # The HAVE_PACKAGES variable uses delimiters at both ends
@@ -121,7 +121,9 @@ def _get_so_dependencies(filename):
     # Linux uses `ldd` to look at shared library linkage, MacOS uses `otool`
     try:
         program = ["ldd"]
-        cmd = subprocess.run([*program, filename], stdout=subprocess.PIPE)
+        cmd = subprocess.run(
+            [*program, filename], stdout=subprocess.PIPE, check=False
+        )
         # Filter out the VDSO and the ELF interpreter on Linux
         results = [
             line
@@ -131,7 +133,9 @@ def _get_so_dependencies(filename):
         return [line.split()[2] for line in results]
     except FileNotFoundError:
         program = ["otool", "-L"]
-        cmd = subprocess.run([*program, filename], stdout=subprocess.PIPE)
+        cmd = subprocess.run(
+            [*program, filename], stdout=subprocess.PIPE, check=False
+        )
         # MacOS puts garbage at the beginning and end of `otool` output
         return [
             line.split()[0]
@@ -139,7 +143,7 @@ def _get_so_dependencies(filename):
         ]
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def get_blas_library():
     """Get the path to the BLAS library that PETSc links to."""
     from petsc4py import PETSc
@@ -152,7 +156,7 @@ def get_blas_library():
 
     # On newer MacOS versions, the PETSc Python extension library doesn't link
     # to BLAS or MKL directly, so we check the PETSc C library.
-    petsc_c_library = [f for f in petsc_py_dependencies if "libpetsc" in f][0]
+    petsc_c_library = next(f for f in petsc_py_dependencies if "libpetsc" in f)
     petsc_c_dependencies = _get_so_dependencies(petsc_c_library)
     for filename in petsc_c_dependencies:
         if any(name in filename for name in library_names):
