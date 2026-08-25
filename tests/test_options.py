@@ -224,6 +224,31 @@ def test_appctx_context_manager(use_prefix, use_pc_class):
     assert (x - xcheck).norm() < 1e-14
 
 
+class MyPythonSNES:
+    pass
+
+
+@pytest.mark.skipnopetsc4py
+@pytest.mark.parametrize("use_prefix",
+                         [True, False],
+                         ids=["with_prefix", "without_prefix"])
+def test_python_type_option(use_prefix):
+    from petsc4py import PETSc
+
+    options = petsctools.OptionsManager(
+        parameters={
+            "snes_type": "python",
+            "snes_python_type": MyPythonSNES,
+        },
+        options_prefix="prefix_" if use_prefix else None
+    )
+
+    with options.inserted_options():
+        opts = PETSc.Options(options.options_prefix)
+        assert opts["snes_python_type"] == f"{__name__}.MyPythonSNES", \
+               "Python type name was not inserted into the options dictionary"
+
+
 @pytest.mark.skipnopetsc4py
 def test_python_options():
     petsctools.init()
