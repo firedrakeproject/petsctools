@@ -483,11 +483,10 @@ class OptionsManager:
         self._used_options = set()
 
         # Decide whether to warn for unused options
-        with self.inserted_options():
-            if self.options_object.getBool("options_left", False):
-                weakref.finalize(self, _warn_unused_options,
-                                 self.to_delete, self._used_options,
-                                 options_prefix=self.options_prefix)
+        if self.options_object.getBool("options_left", False):
+            weakref.finalize(self, _warn_unused_options,
+                             self.to_delete, self._used_options,
+                             options_prefix=self.options_prefix)
 
     def set_default_parameter(self, key: str, val: Any) -> None:
         """Set a default parameter value.
