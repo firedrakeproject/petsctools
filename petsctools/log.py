@@ -1,6 +1,5 @@
 import logging
 
-
 LOGGER = logging.getLogger("petsctools")
 
 debug = LOGGER.debug
