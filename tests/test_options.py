@@ -185,7 +185,7 @@ def test_commandline_options(caplog, options_prefix):
     om = petsctools.OptionsManager(
         default_params, options_prefix=options_prefix
     )
-    assert om.options_prefix == true_prefix
+    assert om.options_prefix == true_prefix, "The later tests are invalid if these prefixes do not match."
 
     with om.inserted_options():
         assert options["opt1"] == "unused"
@@ -206,8 +206,3 @@ def test_commandline_options(caplog, options_prefix):
     assert options[f"{om.options_prefix}opt2"] == "will_overwrite"
     assert options[f"{om.options_prefix}opt3"] == "extra"
     assert f"{om.options_prefix}opt4" not in options
-
-    # TODO
-    # make sure we warn on usage if prefix is None
-    # and the appctx too
-

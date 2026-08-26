@@ -442,14 +442,14 @@ class OptionsManager:
         else:
             default_options = {}
 
-        # Start building parameters from the defaults so
-        # that they will overwritten by any other source.
-        parameters = default_options | parameters
-
         # The parameters to drop from the global options when we leave the
         # inserted_options context. This is everything except for options
         # passed on the command line.
         to_delete = set(parameters.keys())
+
+        # Start building parameters from the defaults so
+        # that they will overwritten by any other source.
+        parameters = default_options | parameters
         warned = False
         for full_key, v in self.options_object.getAll().items():
             if full_key.startswith(options_prefix):
