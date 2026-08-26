@@ -279,7 +279,6 @@ def get_default_options(default_options_set: DefaultOptionSet,
     return default_options
 
 
-# TODO: Add note about how we 'freeze' options at instantiation
 class OptionsManager:
     """Class that helps with managing setting PETSc options.
 
