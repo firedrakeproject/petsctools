@@ -2,11 +2,7 @@ import functools
 import os
 import subprocess
 
-from petsctools.exceptions import PetscToolsException
-
-
-class MissingPetscException(PetscToolsException):
-    pass
+from petsctools.exceptions import MissingPetscException
 
 
 def get_config():
