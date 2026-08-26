@@ -204,7 +204,8 @@ def test_commandline_options(caplog, options_prefix):
     else:
         assert not caplog.records, "Nothing should be logged"
 
-    # make sure the command line options are persistent
+    # Make sure the command line options are persistent but the options added
+    # by the options manager go away.
     assert options["opt1"] == "unused"
     assert options[f"{om.options_prefix}opt2"] == "will_overwrite"
     assert options[f"{om.options_prefix}opt3"] == "extra"
