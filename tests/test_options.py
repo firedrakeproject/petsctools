@@ -212,6 +212,7 @@ def test_commandline_options(caplog, options_prefix):
     assert f"{om.options_prefix}opt4" not in options
 
 
+@pytest.mark.skipnopetsc4py
 def test_inserted_options_dict():
     from petsc4py import PETSc
     prefix = "prefix"
