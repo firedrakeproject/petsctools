@@ -1,5 +1,7 @@
 import warnings
+
 import pytest
+
 import petsctools
 
 
@@ -249,3 +251,15 @@ def test_python_options_ksp(use_prefix):
         ksp.solve(b, x)
 
     assert (x - xcheck).norm() < 1e-14
+
+
+def test_inserted_options_dict():
+    from petsc4py import PETSc
+    prefix = "prefix"
+    params = {
+        "opt_int": 3,
+        "opt_flag": None,
+    }
+    with petsctools.inserted_options(parameters=params, options_prefix=prefix):
+        assert PETSc.Options().getInt("prefix_opt_int") == 3
+        assert PETSc.Options().getBool("prefix_opt_flag")
