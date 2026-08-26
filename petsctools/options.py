@@ -434,7 +434,11 @@ class OptionsManager:
         # Replace any Python objects in the parameters dict with appctx entries
         appmngr = AppContextManager()
         for key, value in parameters.items():
-            if not isinstance(value, _native_petsc_option_types):
+            # Convert Python objects into their string representation for
+            # things like 'pc_python_type' and 'snes_python_type'
+            if key.endswith("python_type") and isinstance(value, type):
+                parameters[key] = f"{value.__module__}.{value.__name__}"
+            elif not isinstance(value, _native_petsc_option_types):
                 parameters[key] = appmngr.add(value)
         self.appmngr = appmngr
 
