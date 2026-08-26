@@ -284,6 +284,7 @@ def test_python_options_ksp(use_prefix):
     assert (x - xcheck).norm() < 1e-14
 
 
+@pytest.mark.skipnopetsc4py
 def test_inserted_options_dict():
     from petsc4py import PETSc
     prefix = "prefix"

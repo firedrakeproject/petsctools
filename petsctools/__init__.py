@@ -64,10 +64,8 @@ else:
             "is_set_from_options",
             "inserted_options",
             "set_default_parameter",
-            "Options",
             "DefaultOptionSet",
             "PCBase",
-            "AppContextManager",
             "PetscToolsAppctxException",
         }
         if name in petsc4py_attrs:
