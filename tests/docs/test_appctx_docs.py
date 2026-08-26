@@ -62,14 +62,11 @@ class DiffusionJacobiPC:
     prefix = "djacobi_"
 
     def setFromOptions(self, pc):
-        from petsc4py import PETSc
         prefix = (pc.getOptionsPrefix() or "") + self.prefix
 
-        options = PETSc.Options()
+        options = petsctools.Options()
         scale = options.getReal(prefix + "scale", 1.0)
-
-        appctx = petsctools.AppContext()
-        sigma = appctx[prefix + "sigma"]
+        sigma = options[prefix + "sigma"]
 
         Ap = diffusion_mat(sigma)
         P = Ap.getDiagonal()
@@ -101,8 +98,6 @@ def test_appctx_docs():
     # [appctx_docs create_ksp-end]
 
     # [appctx_docs set_from_options-start]
-    appmngr = petsctools.AppContextManager()
-
     petsctools.set_from_options(
         ksp,
         parameters={
@@ -111,9 +106,8 @@ def test_appctx_docs():
             'pc_type': 'python',
             'pc_python_type': f'{__name__}.DiffusionJacobiPC',
             'djacobi_scale': 0.9,
-            'djacobi_sigma': appmngr.add(sigma_p),
+            'djacobi_sigma': sigma_p,
         },
-        appmngr=appmngr,
         options_prefix="",
     )
     # [appctx_docs set_from_options-end]
