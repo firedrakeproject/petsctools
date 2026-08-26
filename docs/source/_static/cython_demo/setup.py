@@ -1,8 +1,7 @@
-from setuptools import setup, Extension
-
 import petsc4py
-import petsctools
+from setuptools import Extension, setup
 
+import petsctools
 
 extension = Extension(
     name="fast",

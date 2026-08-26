@@ -1,17 +1,17 @@
 from .config import (  # noqa: F401
     get_config,
-    get_petsc_dir,
-    get_petsc_arch,
-    get_petsc_dirs,
-    get_petscvariables,
-    get_petscconf_h,
     get_external_packages,
+    get_petsc_arch,
+    get_petsc_dir,
+    get_petsc_dirs,
+    get_petscconf_h,
+    get_petscvariables,
 )
 from .exceptions import (  # noqa: F401
-    PetscToolsException,
-    MissingPetscException,
     InvalidEnvironmentException,
     InvalidPetscVersionException,
+    MissingPetscException,
+    PetscToolsException,
 )
 from .utils import PETSC4PY_INSTALLED
 
@@ -32,18 +32,18 @@ if PETSC4PY_INSTALLED:
     from .config import get_blas_library  # noqa: F401
     from .init import init  # noqa: F401
     from .options import (  # noqa: F401
+        DefaultOptionSet,
+        OptionsManager,
+        attach_options,
         flatten_parameters,
         get_commandline_options,
-        OptionsManager,
-        petscobj2str,
-        attach_options,
-        has_options,
         get_options,
-        set_from_options,
-        is_set_from_options,
+        has_options,
         inserted_options,
+        is_set_from_options,
+        petscobj2str,
         set_default_parameter,
-        DefaultOptionSet,
+        set_from_options,
     )
     from .pc import PCBase  # noqa: F401
 else:

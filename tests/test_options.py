@@ -1,5 +1,7 @@
 import warnings
+
 import pytest
+
 import petsctools
 
 
@@ -207,3 +209,15 @@ def test_commandline_options(caplog, options_prefix):
     assert options[f"{om.options_prefix}opt2"] == "will_overwrite"
     assert options[f"{om.options_prefix}opt3"] == "extra"
     assert f"{om.options_prefix}opt4" not in options
+
+
+def test_inserted_options_dict():
+    from petsc4py import PETSc
+    prefix = "prefix"
+    params = {
+        "opt_int": 3,
+        "opt_flag": None,
+    }
+    with petsctools.inserted_options(parameters=params, options_prefix=prefix):
+        assert PETSc.Options().getInt("prefix_opt_int") == 3
+        assert PETSc.Options().getBool("prefix_opt_flag")

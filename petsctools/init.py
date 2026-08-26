@@ -12,7 +12,8 @@ from packaging.version import Version
 
 import petsctools.options
 from petsctools.exceptions import (
-    InvalidEnvironmentException, InvalidPetscVersionException
+    InvalidEnvironmentException,
+    InvalidPetscVersionException,
 )
 
 

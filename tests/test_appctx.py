@@ -1,4 +1,5 @@
 import pytest
+
 import petsctools
 from petsctools.exceptions import PetscToolsAppctxException
 
