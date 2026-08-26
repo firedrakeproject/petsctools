@@ -104,7 +104,7 @@ def test_appctx_docs():
             'ksp_converged_reason': None,
             'ksp_type': 'richardson',
             'pc_type': 'python',
-            'pc_python_type': f'{__name__}.DiffusionJacobiPC',
+            'pc_python_type': DiffusionJacobiPC,
             'djacobi_scale': 0.9,
             'djacobi_sigma': sigma_p,
         },

@@ -247,7 +247,8 @@ class JacobiTestPC:
 
 @pytest.mark.skipnopetsc4py
 @pytest.mark.parametrize("use_prefix", ["with_prefix", "without_prefix"])
-def test_python_options_ksp(use_prefix):
+@pytest.mark.parametrize("use_pc_class", [False, True])
+def test_python_options_ksp(use_prefix, use_pc_class):
     PETSc = petsctools.init()
     n = 4
     sizes = (n, n)
@@ -264,10 +265,14 @@ def test_python_options_ksp(use_prefix):
     parameters = {
         'ksp_type': 'preonly',
         'pc_type': 'python',
-        'pc_python_type': f'{__name__}.JacobiTestPC',
         'jacobi_use_prefixed_options': use_prefix == "with_prefix",
         'jacobi_scale': diag,
     }
+    if use_pc_class:
+        parameters['pc_python_type'] = JacobiTestPC
+    else:
+        parameters['pc_python_type'] = f'{__name__}.JacobiTestPC'
+
     petsctools.set_from_options(
         ksp, parameters=parameters, options_prefix="myksp"
     )
@@ -282,6 +287,31 @@ def test_python_options_ksp(use_prefix):
         ksp.solve(b, x)
 
     assert (x - xcheck).norm() < 1e-14
+
+
+class MyPythonSNES:
+    pass
+
+
+@pytest.mark.skipnopetsc4py
+@pytest.mark.parametrize("use_prefix",
+                         [True, False],
+                         ids=["with_prefix", "without_prefix"])
+def test_python_type_option(use_prefix):
+    from petsc4py import PETSc
+
+    options = petsctools.OptionsManager(
+        parameters={
+            "snes_type": "python",
+            "snes_python_type": MyPythonSNES,
+        },
+        options_prefix="prefix_" if use_prefix else None
+    )
+
+    with options.inserted_options():
+        opts = PETSc.Options(options.options_prefix)
+        assert opts["snes_python_type"] == f"{__name__}.MyPythonSNES", \
+               "Python type name was not inserted into the options dictionary"
 
 
 @pytest.mark.skipnopetsc4py
