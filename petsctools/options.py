@@ -577,6 +577,34 @@ class OptionsManager:
         return PETSc.Options()
 
 
+_global_appctx_data = {}
+"""The global storage for user data with arbitrary python types."""
+
+
+_APPCTX_KEY_PREFIX = "petsctools_appctx_key_"
+"""Prefix used for all appctx entries in the options database."""
+
+
+class AppContextKey(str):
+    """A custom key type for Python objects.
+
+    Warning
+    -------
+    This type should not be instantiated directly by the user, it
+    will be generated as needed by the :class:`.AppContextManager`.
+
+    See Also
+    --------
+    .AppContextManager
+    """
+
+    _count = itertools.count()
+
+    @classmethod
+    def _generate_key(cls):
+        return f"{_APPCTX_KEY_PREFIX}{next(cls._count)}"
+
+
 class AppContextManager:
     """Class for storing Python data associated with a particular PETSc object.
 
@@ -945,34 +973,6 @@ def inserted_options(
         yield
 
 
-_global_appctx_data = {}
-"""The global storage for user data with arbitrary python types."""
-
-
-_APPCTX_KEY_PREFIX = "petsctools_appctx_key_"
-"""Prefix used for all appctx entries in the options database."""
-
-
-class AppContextKey(str):
-    """A custom key type for Python objects.
-
-    Warning
-    -------
-    This type should not be instantiated directly by the user, it
-    will be generated as needed by the :class:`.AppContextManager`.
-
-    See Also
-    --------
-    .AppContextManager
-    """
-
-    _count = itertools.count()
-
-    @classmethod
-    def _generate_key(cls):
-        return f"{_APPCTX_KEY_PREFIX}{next(cls._count)}"
-
-
 class Options(PETSc.Options):
     """Class for interacting with the PETSc options database.
 
@@ -1043,6 +1043,48 @@ class Options(PETSc.Options):
             return _global_appctx_data[value]
         else:
             return value
+
+    def __setitem__(self, option: str | AppContextKey, value: Any, /) -> None:
+        """Insert an option into the database.
+
+        Parameters
+        ----------
+        option
+            The PETSc option or key.
+        value
+            The value to insert.
+
+        """
+        if not isinstance(value, _native_petsc_option_types):
+            # value cannot be natively stored, put in the global appctx data
+            # and pass an ID to the options database
+            value_id = AppContextKey._generate_key()
+            _global_appctx_data[value_id] = value
+            value = value_id
+        super().__setitem__(option, value)
+
+    def __delitem__(self, option: str | AppContextKey, /) -> None:
+        """Remove an item from the database.
+
+        Parameters
+        ----------
+        option
+            The PETSc option or key.
+
+        Raises
+        ------
+        KeyError
+            If ``option`` isn't found in the database.
+
+        """
+        if option not in self:
+            raise KeyError(f"Option '{option}' not found, cannot remove it")
+
+        value = self[option]
+        if not isinstance(value, _native_petsc_option_types):
+            value_id = super().__getitem__(option)
+            del _global_appctx_data[value_id]
+        super().__delitem__(option)
 
     def get(
         self, option: str | AppContextKey, default: Any | None = None
