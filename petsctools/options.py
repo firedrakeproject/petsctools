@@ -384,7 +384,11 @@ class OptionsManager:
     Parameters
     ----------
     parameters
-        The dictionary of parameters to use.
+        The dictionary of parameters to use. Parameter keys must be strings
+        and values may be any type. Note that if 'non-native' types are
+        passed (e.g. a Python object instead of a number, string or bool)
+        then these may only be accessed by using the :class:`Options`
+        class. :class:`PETSc.Options <petsc4py.PETSc.Options>` will not work.
     options_prefix
         The prefix to look up items in the global options database
         (may be ``None``, in which case only entries from ``parameters``
@@ -416,7 +420,7 @@ class OptionsManager:
 
     count = itertools.count()
 
-    def __init__(self, parameters: dict,
+    def __init__(self, parameters: dict[str, Any],
                  options_prefix: str | None = None,
                  default_prefix: str | None = None,
                  default_options_set: DefaultOptionSet | None = None) -> None:
@@ -558,6 +562,10 @@ class OptionsManager:
     def inserted_options(self):
         """Context manager inside which the petsc options database
         contains the parameters from this object.
+
+        Non-native types (e.g. Python objects) can only be accessed using
+        :class:`Options`, not :class:`PETSc.Options <petsc4py.PETSc.Options>`.
+
         """
         try:
             for k, v in self.parameters.items():
@@ -611,6 +619,7 @@ class AppContextManager:
     See Also
     --------
     .OptionsManager
+    .Options
     petsc4py.PETSc.Options
 
     """
@@ -620,8 +629,8 @@ class AppContextManager:
 
     def add(self, val: Any) -> AppContextKey:
         """
-        Add a value to be inserted into the global :class:`.AppContext`
-        database by the :func:`.inserted_options` context manager, or
+        Add a value to be inserted into the global app context database
+        by the :func:`.inserted_options` context manager, or
         by the ``AppContextManager`` directly with
         :meth:`.AppContextManager.inserted_appctx`.
 

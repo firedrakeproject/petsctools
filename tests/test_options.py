@@ -231,10 +231,10 @@ class JacobiTestPC:
         from petsc4py import PETSc
         prefix = (pc.getOptionsPrefix() or "") + self.prefix
 
-        use_prefixed_appctx = PETSc.Options().getBool(
-            prefix + "use_prefixed_appctx")
+        use_prefixed_options = PETSc.Options().getBool(
+            prefix + "use_prefixed_options")
 
-        if use_prefixed_appctx:
+        if use_prefixed_options:
             opts = petsctools.Options(prefix)
             self.scale = opts["scale"]
         else:
@@ -265,7 +265,7 @@ def test_python_options_ksp(use_prefix):
         'ksp_type': 'preonly',
         'pc_type': 'python',
         'pc_python_type': f'{__name__}.JacobiTestPC',
-        'jacobi_use_prefixed_appctx': use_prefix == "with_prefix",
+        'jacobi_use_prefixed_options': use_prefix == "with_prefix",
         'jacobi_scale': diag,
     }
     petsctools.set_from_options(
