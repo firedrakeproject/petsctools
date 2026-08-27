@@ -478,8 +478,8 @@ class OptionsManager:
         if options_prefix is None:
             default_prefix = default_prefix or "petsctools_"
             default_prefix = _validate_prefix(default_prefix)
-            options_prefix = f"{default_prefix}{type(self).count}_"
-            type(self).count += 1
+            options_prefix = f"{default_prefix}{OptionsManager.count}_"
+            OptionsManager.count += 1
             unsafe_prefix = True
         else:
             options_prefix = _validate_prefix(options_prefix)
