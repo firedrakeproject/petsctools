@@ -4,6 +4,7 @@ import contextlib
 import functools
 import itertools
 import numbers
+import sys
 import types
 import warnings
 import weakref
@@ -20,9 +21,40 @@ from petsctools.exceptions import (
     PetscToolsWarning,
 )
 
+
+def _import_petsc_without_initialising():
+    """Import ``petsc4py.PETSc`` without initialising PETSc.
+
+    Returns
+    -------
+    types.ModuleType
+        The ``petsc4py.PETSc`` extension module.
+
+    Notes
+    -----
+    This is the dance `petsctools.init` does, except that it puts the import
+    machinery back as it found it.  `petsc4py.lib.ImportPETSc` registers the
+    extension module as ``petsc4py.PETSc``, which is the name of the shim it
+    shadows, and that shim is the only thing that ever calls
+    ``PETSc._initialize``.  Left registered, it stops the shim running for the
+    rest of the process, so a later ``from petsc4py import PETSc`` hands back
+    a PETSc that nothing has initialised, and the first call into it
+    dereferences a null pointer.
+
+    """
+    in_modules = "petsc4py.PETSc" in sys.modules
+    is_attribute = hasattr(petsc4py, "PETSc")
+    PETSc = petsc4py.lib.ImportPETSc()
+    if not in_modules:
+        del sys.modules["petsc4py.PETSc"]
+    if not is_attribute:
+        delattr(petsc4py, "PETSc")
+    return PETSc
+
+
 # Do this instead of 'from petsc4py import PETSc' to make sure we don't import
 # (and hence initialise) PETSc.
-PETSc = petsc4py.lib.ImportPETSc()
+PETSc = _import_petsc_without_initialising()
 
 _commandline_options = None
 
