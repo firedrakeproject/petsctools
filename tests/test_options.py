@@ -1,3 +1,5 @@
+import subprocess
+import sys
 import warnings
 
 import pytest
@@ -376,3 +378,21 @@ def test_inserted_options_dict():
     with petsctools.inserted_options(parameters=params, options_prefix=prefix):
         assert PETSc.Options().getInt("prefix_opt_int") == 3
         assert PETSc.Options().getBool("prefix_opt_flag")
+
+
+@pytest.mark.skipnopetsc4py
+def test_importing_petsctools_leaves_petsc_initialisable():
+    """Importing petsctools must not stop the petsc4py shim from running.
+
+    The shim is the only thing that calls ``PETSc._initialize``, so for any
+    code that does not call `petsctools.init` itself it is what initialises
+    PETSc.  Run in a subprocess, since PETSc is already initialised here.
+    """
+    script = (
+        "import sys\n"
+        "import petsctools\n"
+        "assert 'petsc4py.PETSc' not in sys.modules\n"
+        "from petsc4py import PETSc\n"
+        "assert PETSc.Sys.isInitialized()\n"
+    )
+    subprocess.run([sys.executable, "-c", script], check=True)
