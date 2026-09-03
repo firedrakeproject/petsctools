@@ -279,8 +279,8 @@ def get_default_options(default_options_set: DefaultOptionSet,
     default_options_set
         The :class:`DefaultOptionSet` which defines the shared options.
     options
-        The :class:`PETSc.Options <petsc4py.PETSc.Options>` database to use. If not provided then the global
-        database will be used.
+        The :class:`PETSc.Options <petsc4py.PETSc.Options>` database to use. If
+        not provided then the global database will be used.
 
     Returns
     -------
@@ -289,6 +289,7 @@ def get_default_options(default_options_set: DefaultOptionSet,
     See Also
     --------
     DefaultOptionSet
+
     """
     if options is None:
         from petsc4py import PETSc
@@ -1130,15 +1131,17 @@ class Options(PETSc.Options):
         or the ``default`` value if ``option`` is not found in the
         global options database.
 
-        If this :class:`petsctools.Options` instance has a prefix then the value
-        corresponding to the key ``self.prefix + option`` will be returned.
+        If this :class:`petsctools.Options` instance has a prefix then the
+        value corresponding to the key ``self.prefix + option`` will be
+        returned.
 
         Parameters
         ----------
         option :
             The PETSc option or key.
         default :
-            The value to return if ``option`` is not in the :class:`petsctools.Options`
+            The value to return if ``option`` is not in the
+            :class:`petsctools.Options`.
 
         Returns
         -------

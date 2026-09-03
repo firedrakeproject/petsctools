@@ -1,4 +1,6 @@
-from .config import (  # noqa: F401
+# ruff: noqa I001  (don't reorder imports)
+
+from .config import (
     get_config,
     get_external_packages,
     get_petsc_arch,
@@ -16,7 +18,7 @@ __all__ = [
     "get_petscconf_h",
     "get_petscvariables",
 ]
-from .exceptions import (  # noqa: F401
+from .exceptions import (
     InvalidEnvironmentException,
     InvalidPetscVersionException,
     MissingPetscException,
@@ -35,7 +37,7 @@ __all__ += ["PETSC4PY_INSTALLED"]
 # is not available then attempting to access these attributes will raise an
 # informative error.
 if PETSC4PY_INSTALLED:
-    from .citation import (  # noqa: F401
+    from .citation import (
         add_citation,
         cite,
         print_citations_at_exit,
@@ -45,11 +47,11 @@ if PETSC4PY_INSTALLED:
         "cite",
         "print_citations_at_exit",
     ]
-    from .config import get_blas_library  # noqa: F401
+    from .config import get_blas_library
     __all__ += ["get_blas_library"]
-    from .init import init  # noqa: F401
+    from .init import init
     __all__ += ["init"]
-    from .options import (  # noqa: F401
+    from .options import (
         DefaultOptionSet,
         Options,
         OptionsManager,
@@ -79,7 +81,7 @@ if PETSC4PY_INSTALLED:
         "set_default_parameter",
         "set_from_options",
     ]
-    from .pc import PCBase  # noqa: F401
+    from .pc import PCBase
     __all__ += ["PCBase"]
 else:
 
