@@ -1,4 +1,6 @@
-from .config import (  # noqa: F401
+# ruff: noqa I001  (don't reorder imports)
+
+from .config import (
     get_config,
     get_external_packages,
     get_petsc_arch,
@@ -7,26 +9,49 @@ from .config import (  # noqa: F401
     get_petscconf_h,
     get_petscvariables,
 )
-from .exceptions import (  # noqa: F401
+__all__ = [
+    "get_config",
+    "get_external_packages",
+    "get_petsc_arch",
+    "get_petsc_dir",
+    "get_petsc_dirs",
+    "get_petscconf_h",
+    "get_petscvariables",
+]
+from .exceptions import (
     InvalidEnvironmentException,
     InvalidPetscVersionException,
     MissingPetscException,
     PetscToolsException,
 )
+__all__ += [
+    "InvalidEnvironmentException",
+    "InvalidPetscVersionException",
+    "MissingPetscException",
+    "PetscToolsException",
+]
 from .utils import PETSC4PY_INSTALLED
+__all__ += ["PETSC4PY_INSTALLED"]
 
 # Now conditionally import the functions that depend on petsc4py. If petsc4py
 # is not available then attempting to access these attributes will raise an
 # informative error.
 if PETSC4PY_INSTALLED:
-    from .citation import (  # noqa: F401
+    from .citation import (
         add_citation,
         cite,
         print_citations_at_exit,
     )
-    from .config import get_blas_library  # noqa: F401
-    from .init import init  # noqa: F401
-    from .options import (  # noqa: F401
+    __all__ += [
+        "add_citation",
+        "cite",
+        "print_citations_at_exit",
+    ]
+    from .config import get_blas_library
+    __all__ += ["get_blas_library"]
+    from .init import init
+    __all__ += ["init"]
+    from .options import (
         DefaultOptionSet,
         Options,
         OptionsManager,
@@ -41,7 +66,23 @@ if PETSC4PY_INSTALLED:
         set_default_parameter,
         set_from_options,
     )
-    from .pc import PCBase  # noqa: F401
+    __all__ += [
+        "DefaultOptionSet",
+        "Options",
+        "OptionsManager",
+        "attach_options",
+        "flatten_parameters",
+        "get_commandline_options",
+        "get_options",
+        "has_options",
+        "inserted_options",
+        "is_set_from_options",
+        "petscobj2str",
+        "set_default_parameter",
+        "set_from_options",
+    ]
+    from .pc import PCBase
+    __all__ += ["PCBase"]
 else:
 
     def __getattr__(name):
