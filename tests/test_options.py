@@ -426,3 +426,31 @@ def test_options_preserve_types():
 
     del opts["my_option"]
     assert len(petsctools.options._option_types) == 0
+
+
+@pytest.mark.skipnopetsc4py
+def test_options_missing_types():
+    # Test that options inserted using PETSc.Options instead of
+    # petsctools.Options still work even though we don't know the type
+    from petsc4py import PETSc
+
+    petsc_opts = PETSc.Options()
+    petsctools_opts = petsctools.Options()
+
+    items = [
+        (666, petsc_opts.getInt),
+        ("a string", petsc_opts.getString),
+        (1.234, petsc_opts.getReal),
+        (1.234e11, petsc_opts.getReal),
+        (True, petsc_opts.getBool),
+        (False, petsc_opts.getBool),
+        (None, None),  # no suitable default getter for None
+    ]
+    for item, getter in items:
+        petsc_opts["my_option"] = item
+
+        assert isinstance(petsc_opts["my_option"], str)
+        assert isinstance(petsctools_opts["my_option"], str)
+
+        if getter is not None:
+            assert getter("my_option") == item

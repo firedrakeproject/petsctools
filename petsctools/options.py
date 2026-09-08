@@ -275,8 +275,10 @@ class DefaultOptionSet:
                      for ending in self.custom_prefix_endings)
 
 
-def get_default_options(default_options_set: DefaultOptionSet,
-                        options: petsc4py.PETSc.Options | None = None) -> dict:
+def get_default_options(
+    default_options_set: DefaultOptionSet,
+    options: Options | petsc4py.PETSc.Options | None = None,
+) -> dict:
     """
     Extract default options for subsolvers with similar prefixes.
 
@@ -285,7 +287,7 @@ def get_default_options(default_options_set: DefaultOptionSet,
     default_options_set
         The :class:`DefaultOptionSet` which defines the shared options.
     options
-        The ``PETSc.Options`` database to use. If not provided then the global
+        The options database to use. If not provided then the global
         database will be used.
 
     Returns
@@ -297,8 +299,7 @@ def get_default_options(default_options_set: DefaultOptionSet,
     DefaultOptionSet
     """
     if options is None:
-        from petsc4py import PETSc
-        options = PETSc.Options()
+        options = Options()
 
     base_prefix = default_options_set.base_prefix
     custom_prefixes = default_options_set.custom_prefixes
@@ -1099,8 +1100,15 @@ class Options(PETSc.Options):
         if value.startswith(_APPCTX_KEY_PREFIX):
             return _global_appctx_data[value]
 
-        # A native type, perform a cast
-        match _option_types[f"{self.prefix or ''}{option}"]:
+        # A native type, try to perform a cast
+        try:
+            opt_type = _option_types[f"{self.prefix or ''}{option}"]
+        except KeyError:
+            # Option was not inserted using petsctools.Options, can't
+            # do anything more
+            return value
+
+        match opt_type:
             case builtins.str:
                 pass
             case builtins.int:
