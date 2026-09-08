@@ -412,3 +412,17 @@ def test_importing_petsctools_leaves_petsc_initialisable():
         "assert PETSc.Sys.isInitialized()\n"
     )
     subprocess.run([sys.executable, "-c", script], check=True)
+
+
+@pytest.mark.skipnopetsc4py
+def test_options_preserve_types():
+    opts = petsctools.Options()
+
+    items = [666, "a string", 1.234, 1.234e11, True, False, None]
+    for item in items:
+        opts["my_option"] = item
+        assert opts["my_option"] == item
+        assert type(opts["my_option"]) is type(item)
+
+    del opts["my_option"]
+    assert len(petsctools.options._option_types) == 0
