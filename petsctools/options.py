@@ -1094,8 +1094,7 @@ class Options(PETSc.Options):
             If the ``Options`` does not contain a value for ``option``.
         """
         # might raise a KeyError, which we want
-        value = super().__getitem__(option)
-        assert isinstance(value, str)
+        value: str = super().__getitem__(option)
 
         if value.startswith(_APPCTX_KEY_PREFIX):
             return _global_appctx_data[value]
