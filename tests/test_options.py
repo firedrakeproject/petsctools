@@ -7,22 +7,31 @@ import pytest
 import petsctools
 
 
-@pytest.fixture(autouse=True, scope="module")
+@pytest.fixture(autouse=True)
 def temporarily_remove_options():
     """Remove all options when the module is entered and reinsert them at exit.
     This ensures that options in e.g. petscrc files will not pollute the tests.
     """
-    if petsctools.PETSC4PY_INSTALLED:
-        PETSc = petsctools.init()
-        options = PETSc.Options()
-        previous_options = {
-            k: v for k, v in options.getAll().items()
-        }
-        options.clear()
+    if not petsctools.PETSC4PY_INSTALLED:
+        yield
+        return
+
+    petsctools.init([])
+    options = petsctools.Options()
+
+    previous_options = dict(options.getAll())
+    options.clear()
+    previous_option_types = petsctools.options._option_types
+    petsctools.options._option_types = {}
+    previous_global_appctx_data = petsctools.options._global_appctx_data
+    petsctools.options._global_appctx_data = {}
+
     yield
-    if petsctools.PETSC4PY_INSTALLED:
-        for k, v in previous_options.items():
-            options[k] = v
+
+    for k, v in previous_options.items():
+        options[k] = v
+    petsctools.options._option_types = previous_option_types 
+    petsctools.options._global_appctx_data = previous_global_appctx_data 
 
 
 @pytest.fixture(autouse=True)
@@ -181,8 +190,6 @@ def test_default_options():
 
 @pytest.mark.skipnopetsc4py
 def test_python_options_with_manager():
-    petsctools.init()
-
     prefix0_param = object()
     prefix1_param = object()
     opts_manager = petsctools.OptionsManager(
@@ -201,19 +208,20 @@ def test_python_options_with_manager():
     with opts_manager.inserted_options():
         assert opts0.get("param1") is prefix0_param
         assert opts0["param1"] is prefix0_param
+        assert opts0["param2"] == "some_value"
         assert opts0.getAll() \
             == {"param1": prefix0_param, "param2": "some_value"}
 
         assert opts1.get("param1") is prefix1_param
         assert opts1["param1"] is prefix1_param
-        # NOTE: ideally we would get the integer back here
+        assert opts1["param2"] == 666
         assert opts1.getAll() \
-            == {"param1": prefix1_param, "param2": "666"}
+            == {"param1": prefix1_param, "param2": 666}
 
 
 @pytest.mark.skipnopetsc4py
 def test_python_options_without_manager():
-    PETSc = petsctools.init()
+    from petsc4py import PETSc
 
     petsc_opts = PETSc.Options()
     petsctools_opts = petsctools.Options()
@@ -267,7 +275,8 @@ class JacobiTestPC:
 @pytest.mark.parametrize("use_prefix", ["with_prefix", "without_prefix"])
 @pytest.mark.parametrize("use_pc_class", [False, True])
 def test_python_options_ksp(use_prefix, use_pc_class):
-    PETSc = petsctools.init()
+    from petsc4py import PETSc
+
     n = 4
     sizes = (n, n)
 
