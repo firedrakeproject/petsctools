@@ -1137,5 +1137,6 @@ class Options(PETSc.Options):
         #
         # because this will raise KeyErrors for some command line arguments.
         return {
-            key: self.get(key, value) for key, value in super().getAll().items()
+            key: self.get(key, value)
+            for key, value in super().getAll().items()
         }
