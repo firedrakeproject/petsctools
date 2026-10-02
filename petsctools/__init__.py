@@ -55,7 +55,6 @@ else:
             "get_commandline_options",
             "Options",
             "OptionsManager",
-            "AppContextManager",
             "petscobj2str",
             "attach_options",
             "has_options",
