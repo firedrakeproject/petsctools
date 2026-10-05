@@ -517,8 +517,9 @@ class OptionsManager:
                 key = full_key[len(options_prefix):]
                 parameters[key] = v
 
-                # option is set globally, don't drop when we exit the
-                # context manager
+                # Existing keys outside the shared defaults are kept after
+                # this context. Shared-default keys stay in to_delete and are
+                # removed on exit.
                 if key not in default_options:
                     to_delete.discard(key)
         if unsafe_options:
