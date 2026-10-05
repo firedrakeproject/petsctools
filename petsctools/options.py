@@ -499,14 +499,11 @@ class OptionsManager:
         else:
             default_options = {}
 
-        # Start building parameters from the defaults so
-        # that they will overwritten by any other source.
+        # Start with shared defaults and let explicit parameters override them.
         parameters = default_options | parameters
-        inherited_options = set(default_options)
+        default_options = set(default_options)
 
-        # The parameters to drop from the global options when we leave the
-        # inserted_options context. This is everything except for options
-        # passed on the command line.
+        # Shared defaults and explicit parameters are cleanup candidates.
         to_delete = set(parameters.keys())
         unsafe_options = []
         for full_key, v in self.options_object.getAll().items():
@@ -517,9 +514,9 @@ class OptionsManager:
                 key = full_key[len(options_prefix):]
                 parameters[key] = v
 
-                # Keep existing options, except inherited defaults, which
-                # are temporary copies under this prefix.
-                if key not in inherited_options:
+                # Options outside the shared defaults remain in the database
+                # after the context exits. Shared-default keys are deleted.
+                if key not in default_options:
                     to_delete.discard(key)
         if unsafe_options:
             unsafe_options_str = "\n".join(

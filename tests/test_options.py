@@ -182,7 +182,7 @@ def test_default_options():
 @pytest.mark.skipnopetsc4py
 def test_inserted_options_deletes_default_options():
     """Check that inserted_options removes the options that the
-    OptionsManager inherits from its default options set, and keeps
+    OptionsManager receives through its default options set, and keeps
     the options that the database already held."""
     from petsc4py import PETSc
 
@@ -201,7 +201,51 @@ def test_inserted_options_deletes_default_options():
         pass
 
     assert options.getAll() == opts_before
-    assert "parent_0_ksp_type" not in options
+    assert "parent_0_ksp_type" not in options.getAll()
+
+
+@pytest.mark.skipnopetsc4py
+def test_inserted_options_deletes_defaults_for_multiple_prefixes():
+    """Check shared defaults are removed for sequential child managers."""
+    from petsc4py import PETSc
+
+    options = PETSc.Options()
+    options["parent_ksp_type"] = "cg"
+    default_options_set = petsctools.DefaultOptionSet("parent", [0, 1])
+    children = [
+        petsctools.OptionsManager(
+            parameters={},
+            options_prefix=f"parent_{i}",
+            default_options_set=default_options_set,
+        )
+        for i in (0, 1)
+    ]
+
+    for child in children:
+        key = child.options_prefix + "ksp_type"
+        with child.inserted_options():
+            assert options[key] == "cg"
+        assert key not in options.getAll()
+
+
+@pytest.mark.skipnopetsc4py
+def test_inserted_options_child_option_overrides_default():
+    """Check a child option overrides a shared default while inserted."""
+    from petsc4py import PETSc
+
+    options = PETSc.Options()
+    options["parent_ksp_type"] = "cg"
+    options["parent_1_ksp_type"] = "gmres"
+    child = petsctools.OptionsManager(
+        parameters={},
+        options_prefix="parent_1",
+        default_options_set=petsctools.DefaultOptionSet("parent", [0, 1]),
+    )
+
+    assert child.parameters["ksp_type"] == "gmres"
+    with child.inserted_options():
+        assert options["parent_1_ksp_type"] == "gmres"
+    assert "parent_1_ksp_type" not in options.getAll()
 
 
 @pytest.mark.skipnopetsc4py
