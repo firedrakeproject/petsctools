@@ -180,6 +180,31 @@ def test_default_options():
 
 
 @pytest.mark.skipnopetsc4py
+def test_inserted_options_deletes_default_options():
+    """Check that inserted_options removes the options that the
+    OptionsManager inherits from its default options set, and keeps
+    the options that the database already held."""
+    from petsc4py import PETSc
+
+    options = PETSc.Options()
+    options["parent_ksp_type"] = "cg"
+    options["parent_0_pc_type"] = "jacobi"
+
+    child = petsctools.OptionsManager(
+        parameters={},
+        options_prefix="parent_0",
+        default_options_set=petsctools.DefaultOptionSet("parent", [0]))
+    assert child.parameters == {"ksp_type": "cg", "pc_type": "jacobi"}
+    with child.inserted_options():
+        pass
+
+    del options["parent_ksp_type"]
+    remaining = {k: v for k, v in options.getAll().items()
+                 if k.startswith("parent")}
+    assert remaining == {"parent_0_pc_type": "jacobi"}
+
+
+@pytest.mark.skipnopetsc4py
 def test_python_options_with_manager():
     petsctools.init()
 
