@@ -189,19 +189,19 @@ def test_inserted_options_deletes_default_options():
     options = PETSc.Options()
     options["parent_ksp_type"] = "cg"
     options["parent_0_pc_type"] = "jacobi"
+    opts_before = dict(options.getAll())
 
     child = petsctools.OptionsManager(
         parameters={},
         options_prefix="parent_0",
         default_options_set=petsctools.DefaultOptionSet("parent", [0]))
     assert child.parameters == {"ksp_type": "cg", "pc_type": "jacobi"}
+
     with child.inserted_options():
         pass
 
-    del options["parent_ksp_type"]
-    remaining = {k: v for k, v in options.getAll().items()
-                 if k.startswith("parent")}
-    assert remaining == {"parent_0_pc_type": "jacobi"}
+    assert options.getAll() == opts_before
+    assert "parent_0_ksp_type" not in options
 
 
 @pytest.mark.skipnopetsc4py
