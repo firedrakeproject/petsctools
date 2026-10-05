@@ -201,7 +201,6 @@ def test_inserted_options_deletes_default_options():
         pass
 
     assert options.getAll() == opts_before
-    assert "parent_0_ksp_type" not in options.getAll()
 
 
 @pytest.mark.skipnopetsc4py
@@ -236,6 +235,7 @@ def test_inserted_options_child_option_overrides_default():
     options = PETSc.Options()
     options["parent_ksp_type"] = "cg"
     options["parent_1_ksp_type"] = "gmres"
+    opts_before = dict(options.getAll())
     child = petsctools.OptionsManager(
         parameters={},
         options_prefix="parent_1",
@@ -245,7 +245,7 @@ def test_inserted_options_child_option_overrides_default():
     assert child.parameters["ksp_type"] == "gmres"
     with child.inserted_options():
         assert options["parent_1_ksp_type"] == "gmres"
-    assert "parent_1_ksp_type" not in options.getAll()
+    assert options.getAll() == opts_before
 
 
 @pytest.mark.skipnopetsc4py

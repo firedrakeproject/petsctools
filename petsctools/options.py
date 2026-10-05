@@ -499,15 +499,14 @@ class OptionsManager:
         else:
             default_options = {}
 
-        # Start building parameters from the defaults so
-        # that they will overwritten by any other source.
-        parameters = default_options | parameters
-        default_options = set(default_options)
-
         # The parameters to drop from the global options when we leave the
         # inserted_options context. This is everything except for options
         # passed on the command line.
-        to_delete = set(parameters.keys())
+        to_delete = set(parameters.keys()) | set(default_options.keys())
+
+        # Start building parameters from the defaults so
+        # that they will overwritten by any other source.
+        parameters = default_options | parameters
         unsafe_options = []
         for full_key, v in self.options_object.getAll().items():
             if full_key.startswith(options_prefix):
@@ -517,11 +516,9 @@ class OptionsManager:
                 key = full_key[len(options_prefix):]
                 parameters[key] = v
 
-                # Existing keys outside the shared defaults are kept after
-                # this context. Shared-default keys stay in to_delete and are
-                # removed on exit.
-                if key not in default_options:
-                    to_delete.discard(key)
+                # option is set globally, don't drop when we exit the
+                # context manager
+                to_delete.discard(key)
         if unsafe_options:
             unsafe_options_str = "\n".join(
                 f"  {opt}" for opt in unsafe_options
