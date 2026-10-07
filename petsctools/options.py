@@ -508,7 +508,10 @@ class OptionsManager:
         # that they will overwritten by any other source.
         # Start building parameters from the defaults so
         # that they will overwritten by any other source.
+        # Start building parameters from the defaults so
+        # that they will overwritten by any other source.
         parameters = default_options | parameters
+        to_delete = set(parameters.keys())
         to_delete = set(parameters.keys())
         unsafe_options = []
         for full_key, v in self.options_object.getAll().items():
