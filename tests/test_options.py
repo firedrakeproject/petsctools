@@ -180,6 +180,48 @@ def test_default_options():
 
 
 @pytest.mark.skipnopetsc4py
+def test_inserted_options_cleans_shared_defaults():
+    """Check shared defaults are cleaned up across sequential child managers.
+    """
+    from petsc4py import PETSc
+
+    options = PETSc.Options()
+    options["parent_ksp_type"] = "cg"
+    options["parent_0_pc_type"] = "jacobi"
+    options["parent_1_ksp_type"] = "gmres"
+    opts_before = dict(options.getAll())
+
+    # Treat `parent_` options as defaults for `parent_0_` and `parent_1_`.
+    default_options_set = petsctools.DefaultOptionSet("parent", [0, 1])
+    children = [
+        petsctools.OptionsManager(
+            parameters={},
+            options_prefix=f"parent_{i}",
+            default_options_set=default_options_set,
+        )
+        for i in (0, 1)
+    ]
+
+    # Child 0 uses the shared KSP default; child 1's explicit KSP type wins.
+    assert children[0].parameters == {"ksp_type": "cg", "pc_type": "jacobi"}
+    assert children[1].parameters["ksp_type"] == "gmres"
+
+    # Child 0's copied default is temporary, while its explicit PC type stays.
+    with children[0].inserted_options():
+        assert options["parent_0_ksp_type"] == "cg"
+    assert "parent_0_ksp_type" not in options.getAll()
+    assert options["parent_0_pc_type"] == "jacobi"
+
+    # Child 1's explicit KSP type remains after its context exits.
+    with children[1].inserted_options():
+        assert options["parent_1_ksp_type"] == "gmres"
+    assert options["parent_1_ksp_type"] == "gmres"
+
+    # Context managers must leave the original PETSc database unchanged.
+    assert options.getAll() == opts_before
+
+
+@pytest.mark.skipnopetsc4py
 def test_python_options_with_manager():
     petsctools.init()
 
