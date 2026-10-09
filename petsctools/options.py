@@ -1023,7 +1023,7 @@ class Options(PETSc.Options):
 
         # A native type, try to perform a cast
         try:
-            opt_type = _option_types[f"{self.prefix or ''}{option}"]
+            opt_type = _option_types[f"{self.prefix}{option}"]
         except KeyError:
             # Option was not inserted using petsctools.Options, can't
             # do anything more
@@ -1071,7 +1071,7 @@ class Options(PETSc.Options):
             value = value_id
 
         # Save the type of value so we can cast to it in __getitem__
-        _option_types[f"{self.prefix or ''}{option}"] = type(value)
+        _option_types[f"{self.prefix}{option}"] = type(value)
 
         super().__setitem__(option, value)
 
