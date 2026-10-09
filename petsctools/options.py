@@ -990,7 +990,7 @@ class Options(PETSc.Options):
         key
             An internal key corresponding to ``option``.
         """
-        return AppContextKey(self.getString((self.prefix or "") + option))
+        return AppContextKey(self.getString((self.prefix or '') + option))
 
     def __getitem__(self, option: str | AppContextKey, /) -> Any:
         """
@@ -1023,7 +1023,7 @@ class Options(PETSc.Options):
 
         # A native type, try to perform a cast
         try:
-            opt_type = _option_types[f"{self.prefix or ""}{option}"]
+            opt_type = _option_types[f"{self.prefix or ''}{option}"]
         except KeyError:
             # Option was not inserted using petsctools.Options, can't
             # do anything more
@@ -1071,7 +1071,7 @@ class Options(PETSc.Options):
             value = value_id
 
         # Save the type of value so we can cast to it in __getitem__
-        _option_types[f"{self.prefix or ""}{option}"] = type(value)
+        _option_types[f"{self.prefix or ''}{option}"] = type(value)
 
         super().__setitem__(option, value)
 
@@ -1097,10 +1097,10 @@ class Options(PETSc.Options):
             value_id = super().__getitem__(option)
             del _global_appctx_data[value_id]
 
-        if f"{self.prefix or ""}{option}" in _option_types:
+        if f"{self.prefix or ''}{option}" in _option_types:
             # If the option was set using PETSc.Options then there won't be a
             # corresponding _option_types entry
-            del _option_types[f"{self.prefix or ""}{option}"]
+            del _option_types[f"{self.prefix or ''}{option}"]
         super().__delitem__(option)
 
     def get(
