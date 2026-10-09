@@ -438,9 +438,12 @@ def test_options_preserve_types():
 
 
 @pytest.mark.skipnopetsc4py
-def test_options_missing_types():
+@pytest.mark.parametrize("deleter", ["petsc4py", "petsctools"])
+@pytest.mark.parametrize("setter", ["petsc4py", "petsctools"])
+def test_options_missing_types(setter, deleter):
     # Test that options inserted using PETSc.Options instead of
-    # petsctools.Options still work even though we don't know the type
+    # petsctools.Options still work even though we don't know the type.
+    # Also test the inverse.
     from petsc4py import PETSc
 
     petsc_opts = PETSc.Options()
@@ -456,10 +459,25 @@ def test_options_missing_types():
         (None, None),  # no suitable default getter for None
     ]
     for item, getter in items:
-        petsc_opts["my_option"] = item
+        if setter == "petsc4py":
+            petsc_opts["my_option"] = item
+        else:
+            petsctools_opts["my_option"] = item
 
         assert isinstance(petsc_opts["my_option"], str)
-        assert isinstance(petsctools_opts["my_option"], str)
+        if setter == "petsc4py":
+            assert isinstance(petsctools_opts["my_option"], str)
+        else:
+            assert petsctools_opts["my_option"] == item
 
         if getter is not None:
             assert getter("my_option") == item
+
+        # also test removal
+        if deleter == "petsc4py":
+            del petsc_opts["my_option"]
+        else:
+            del petsctools_opts["my_option"]
+        for opts in [petsc_opts, petsctools_opts]:
+            with pytest.raises(KeyError):
+                opts["my_option"]

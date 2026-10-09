@@ -1097,7 +1097,10 @@ class Options(PETSc.Options):
             value_id = super().__getitem__(option)
             del _global_appctx_data[value_id]
 
-        del _option_types[f"{self.prefix or ''}{option}"]
+        if f"{self.prefix}{option}" in _option_types:
+            # If the option was set using PETSc.Options then there won't be a
+            # corresponding _option_types entry
+            del _option_types[f"{self.prefix}{option}"]
         super().__delitem__(option)
 
     def get(
