@@ -1131,12 +1131,7 @@ class Options(PETSc.Options):
 
     def getAll(self) -> dict[str, Any]:
         """Return all entries."""
-        # Extremely bizarrely we cannot do
-        #
-        #   {key: self[key] for key, value in super().getAll()}
-        #
-        # because this will raise KeyErrors for some command line arguments.
         return {
-            key: self.get(key, value)
+            key: self[key]
             for key, value in super().getAll().items()
         }
