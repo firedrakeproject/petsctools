@@ -2,6 +2,7 @@
 
 # IMPORTANT: This file cannot be accessed if petsctools is installed in editable mode.
 
+from mpi4py cimport libmpi as cmpi
 from petsc4py cimport PETSc as _PETSc
 
 # clearer aliases from petsc4py, so the names here match the C API
@@ -53,6 +54,10 @@ cdef extern from "petscsf.h":
         PetscInt rank
         PetscInt index
 
+    PetscErrorCode PetscSFCreateSectionSF(PetscSF, PetscSection, PetscInt[], PetscSection, PetscSF*)
+    PetscErrorCode PetscSFBcastBegin(PetscSF,cmpi.MPI_Datatype,const void*, void*, cmpi.MPI_Op)
+    PetscErrorCode PetscSFBcastEnd(PetscSF,cmpi.MPI_Datatype,const void*, void*, cmpi.MPI_Op)
+    PetscErrorCode PetscSFDistributeSection(PetscSF,PetscSection,PetscInt*[],PetscSection)
     PetscErrorCode PetscSFGetGraph(PetscSF,PetscInt*,PetscInt*,const PetscInt**,const PetscSFNode**)
     PetscErrorCode PetscSFSetGraph(PetscSF,PetscInt,PetscInt,PetscInt*,PetscCopyMode,PetscSFNode*,PetscCopyMode)
 

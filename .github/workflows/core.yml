@@ -106,11 +106,12 @@ jobs:
           . venv-petsctools/bin/activate
           pytest petsctools-repo
 
-      - name: Install petsc4py
+      - name: Install petsc4py and mpi4py
         id: install-petsc4py
         if: success() || steps.install.conclusion == 'success'
         run: |
           . venv-petsctools/bin/activate
+          pip install --verbose mpi4py
           pip install --verbose $PETSC_DIR/src/binding/petsc4py
 
       - name: Test PETSc initialisation
