@@ -42,6 +42,8 @@ apidoc_modules = [{
     "path": "../../petsctools",
     "destination": "generated",
 }]
+apidoc_module_first = True
+apidoc_separate_modules = True
 
 # -- sphinx.ext.intersphinx configuration -------------------------------------
 
