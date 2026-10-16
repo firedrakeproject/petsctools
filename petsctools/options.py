@@ -1126,7 +1126,12 @@ class Options(PETSc.Options):
 
     def getAll(self) -> dict[str, Any]:
         """Return all entries."""
+        # Try to apply type casting to the objects returned by super().getAll()
+        # but use .get instead of __getitem__ because the latter does not work
+        # with command line arguments starting with '--'. For example, '--pdb'
+        # will be shown by getAll() as the key 'pdb', PETSc.Options()["pdb"]
+        # will raise a KeyError.
         return {
-            key: self[key]
+            key: self.get(key, value)
             for key, value in super().getAll().items()
         }
