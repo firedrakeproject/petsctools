@@ -20,6 +20,8 @@ def temporarily_remove_options():
     options = petsctools.Options()
 
     previous_options = dict(options.getAll())
+    # Note that options.clear() does not actually remove all options from
+    # the database - definitely a bug.
     options.clear()
     previous_option_types = petsctools.options._option_types
     petsctools.options._option_types = {}
@@ -28,6 +30,7 @@ def temporarily_remove_options():
 
     yield
 
+    options.clear()
     for k, v in previous_options.items():
         options[k] = v
     petsctools.options._option_types = previous_option_types 
@@ -481,3 +484,26 @@ def test_options_missing_types(setter, deleter):
         for opts in [petsc_opts, petsctools_opts]:
             with pytest.raises(KeyError):
                 opts["my_option"]
+
+
+@pytest.mark.skipnopetsc4py
+@pytest.mark.parametrize("backend", ["petsc4py", "petsctools"])
+def test_double_dash_options_do_not_break_getAll(backend):
+    # PETSc.Options.getAll() does strange things to double-dashed options. Here
+    # we just check that the original behaviour is retained and that we do not
+    # raise KeyErrors.
+    from petsc4py import PETSc
+
+    opts = petsctools.Options() if backend == "petsctools" else PETSc.Options()
+    opts["--value"] = "xyz"
+
+    # Note that opts.getAll() contains more than one entry because
+    # PETSc.Options().clear() is bugged so we get previous entries too.
+    assert ("value", "xyz") in opts.getAll().items()
+
+    # Check that PETSc have the odd behaviour that we expect - if this fails
+    # then we can undo things!
+    with pytest.raises(KeyError):
+        opts["value"]
+    with pytest.raises(KeyError):
+        opts.getString("value")
